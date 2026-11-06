@@ -79,8 +79,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .card .aura{position:absolute;left:-34%;right:-34%;bottom:-26%;height:70%;border-radius:50%;
   background:radial-gradient(50% 50% at 50% 62%,var(--c2) 0%,color-mix(in srgb,var(--c2) 55%,var(--c1)) 16%,var(--c1) 32%,color-mix(in srgb,var(--c0) 85%,transparent) 54%,transparent 76%);
   transform:translateY(12%) scale(.95);transform-origin:50% 100%;opacity:.92;transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .6s}
-.wheel.stacked .card::before,.wheel.flat .card::before{opacity:0}
-.wheel.stacked:not(.flat) .card:last-child::before{opacity:1}
+.wheel.flat .card::before{opacity:0}
 .card.on .aura,.wheel.live .card:hover .aura{transform:translateY(-4%) scale(1.12);opacity:1}
 .card.win .aura{transform:translateY(-12%) scale(1.25);opacity:1;animation:breathe 3.2s ease-in-out .9s infinite alternate}
 @keyframes breathe{from{transform:translateY(-12%) scale(1.25)}to{transform:translateY(-17%) scale(1.33)}}
@@ -210,9 +209,9 @@ const edit=$("edit"),wheel=$("wheel"),decideUI=$("decideUI"),rcard=$("rcard"),ra
 const qIn=$("q"),ul=$("opts"),addBtn=$("add"),go=$("go"),hint=$("hint"),dq=$("dq"),spinBtn=$("spin"),dhint=$("dhint"),rq=$("rq"),ra=$("ra");
 
 const I18N={
- en:{title:"Let’s\ndecide",qLabel:"Problem of the day…",defQ:"What’s for dinner?",optsLabel:"Options…",clearAll:"Clear all",opt:"Option",add:"Add option",max:"That’s plenty",deal:"Deal the cards",needTwo:"Add at least two options",change:"Change options",hintTouch:"Flick the cards or shake your phone",hintDesk:"Drag the cards, press Spin or hit Space",spin:"Spin",again:"Spin again",share:"Share",copied:"Copied",copyFail:"Couldn’t copy",clear:"Clear",remove:"Remove option",fallbackQ:"Let’s decide",decision:"Decision",defOpts:["Pizza","Noodles","Tacos"]},
- ru:{title:"Давай\nрешим",qLabel:"Вопрос дня…",defQ:"Что на ужин?",optsLabel:"Варианты…",clearAll:"Очистить всё",opt:"Вариант",add:"Добавить вариант",max:"Вариантов достаточно",deal:"Раздать карты",needTwo:"Нужно хотя бы два варианта",change:"Изменить варианты",hintTouch:"Смахни карты или потряси телефон",hintDesk:"Потяни карты, нажми «Крутить» или пробел",spin:"Крутить",again:"Ещё раз",share:"Поделиться",copied:"Скопировано",copyFail:"Не получилось скопировать",clear:"Очистить",remove:"Удалить вариант",fallbackQ:"Давай решим",decision:"Решение",defOpts:["Пицца","Лапша","Тако"]},
- sr:{title:"Hajde da\nodlučimo",qLabel:"Pitanje dana…",defQ:"Šta za večeru?",optsLabel:"Opcije…",clearAll:"Obriši sve",opt:"Opcija",add:"Dodaj opciju",max:"Dovoljno opcija",deal:"Podeli karte",needTwo:"Dodaj bar dve opcije",change:"Promeni opcije",hintTouch:"Povuci karte ili protresi telefon",hintDesk:"Povuci karte, pritisni „Zavrti“ ili razmak",spin:"Zavrti",again:"Ponovo",share:"Podeli",copied:"Kopirano",copyFail:"Kopiranje nije uspelo",clear:"Obriši",remove:"Ukloni opciju",fallbackQ:"Hajde da odlučimo",decision:"Odluka",defOpts:["Pica","Nudle","Tako"]}
+ en:{title:"Let’s\ndecide",qLabel:"Problem of the day…",defQ:"What’s for dinner?",optsLabel:"Options…",clearAll:"Clear all",opt:"Option",add:"Add option",max:"That’s plenty",deal:"Deal the cards",needTwo:"Add at least two options",change:"Change options",hintTouch:"Flick the cards or shake your phone",hintDesk:"Drag the cards, press Spin or hit Space",spin:"Spin",again:"Spin again",share:"Share",copied:"Copied",copyFail:"Couldn’t copy",clear:"Clear",remove:"Remove option",fallbackQ:"Let’s decide",decision:"Decision",saved:"Image saved",defOpts:["Pizza","Noodles","Tacos"]},
+ ru:{title:"Давай\nрешим",qLabel:"Вопрос дня…",defQ:"Что на ужин?",optsLabel:"Варианты…",clearAll:"Очистить всё",opt:"Вариант",add:"Добавить вариант",max:"Вариантов достаточно",deal:"Раздать карты",needTwo:"Нужно хотя бы два варианта",change:"Изменить варианты",hintTouch:"Смахни карты или потряси телефон",hintDesk:"Потяни карты, нажми «Крутить» или пробел",spin:"Крутить",again:"Ещё раз",share:"Поделиться",copied:"Скопировано",copyFail:"Не получилось скопировать",clear:"Очистить",remove:"Удалить вариант",fallbackQ:"Давай решим",decision:"Решение",saved:"Картинка сохранена",defOpts:["Пицца","Лапша","Тако"]},
+ sr:{title:"Hajde da\nodlučimo",qLabel:"Pitanje dana…",defQ:"Šta za večeru?",optsLabel:"Opcije…",clearAll:"Obriši sve",opt:"Opcija",add:"Dodaj opciju",max:"Dovoljno opcija",deal:"Podeli karte",needTwo:"Dodaj bar dve opcije",change:"Promeni opcije",hintTouch:"Povuci karte ili protresi telefon",hintDesk:"Povuci karte, pritisni „Zavrti“ ili razmak",spin:"Zavrti",again:"Ponovo",share:"Podeli",copied:"Kopirano",copyFail:"Kopiranje nije uspelo",clear:"Obriši",remove:"Ukloni opciju",fallbackQ:"Hajde da odlučimo",decision:"Odluka",saved:"Slika sačuvana",defOpts:["Pica","Nudle","Tako"]}
 };
 let lang=(()=>{try{const v=localStorage.getItem("decide-lang");if(I18N[v])return v}catch(e){}const n=(navigator.language||"en").slice(0,2).toLowerCase();return n==="ru"?"ru":["sr","hr","bs","sh"].includes(n)?"sr":"en"})();
 const t=k=>I18N[lang][k];
@@ -249,7 +248,7 @@ function buildCards(){
     const oi=i%valid.length,el=document.createElement("div");
     el.className="card";el.innerHTML='<div class="face"><div class="aura"></div><div class="grain"></div><div class="name"><span></span></div></div>';
     wheel.appendChild(el);
-    cards.push({el,i,oi,ang:0,rad:0,tilt:0,s:1,o:1});
+    cards.push({el,i,oi,ang:0,rad:0,tilt:0,s:1,o:1,x:0,y:0});
   }
   paintCards();
 }
@@ -263,7 +262,9 @@ function fitName(el){
   while(fs>min&&over()){fs*=.92;sp.style.fontSize=fs+"px"}
   if(over())sp.style.overflowWrap="anywhere";
 }
-function stackPose(){G.z=0;cards.forEach((c,i)=>{c.rad=i*.6;c.ang=-phi;c.tilt=jitter(i);c.s=L.stackScale;c.o=1})}
+const STACK=[{r:0,x:0,y:0,s:1,o:1},{r:-6,x:-18,y:-8,s:.97,o:.55},{r:-12,x:-34,y:-12,s:.94,o:.3},{r:-12,x:-34,y:-12,s:.94,o:0}];
+const stackP=(i,N)=>STACK[Math.min(N-1-i,3)];
+function stackPose(){G.z=0;const N=cards.length;cards.forEach((c,i)=>{const P=stackP(i,N);c.rad=i*.6;c.ang=-phi;c.tilt=P.r;c.x=P.x;c.y=P.y;c.s=L.stackScale*P.s;c.o=P.o})}
 
 let onIdx=-1,resultIdx=-1;
 function updateOn(){
@@ -280,7 +281,7 @@ gsap.ticker.add(()=>{
   wheel.style.setProperty("--cx",C.x+"px");wheel.style.setProperty("--cy",C.y+"px");
   for(const c of cards){
     const a=c.ang+phi,f=c.rad>2?Math.min(1,Math.max(0,(Math.cos(a*Math.PI/180)-.12)/.38)):1;
-    c.el.style.transform=`translate(-50%,-50%) translateZ(${-G.z}px) rotateY(${a}deg) translateZ(${c.rad}px) rotate(${c.tilt}deg) scale(${c.s})`;
+    c.el.style.transform=`translate(-50%,-50%) translate(${c.x}px,${c.y}px) translateZ(${-G.z}px) rotateY(${a}deg) translateZ(${c.rad}px) rotate(${c.tilt}deg) scale(${c.s})`;
     c.el.style.opacity=c.o*f;
     c.el.style.visibility=c.o*f<.01?"hidden":"visible";
     c.el.style.zIndex=Math.round(2000+c.rad*Math.cos(a*Math.PI/180)*4-G.z*4+c.i*.01);
@@ -349,8 +350,7 @@ function refresh(){
   layout();
   if(cards.length!==L.S||builtN!==valid.length){
     builtN=valid.length;buildCards();stackPose();C.x=L.edit.x;C.y=L.edit.y;
-    cards.forEach(c=>{c.o=0;c.s=L.stackScale*.88});
-    gsap.to(cards,{o:1,s:L.stackScale,duration:T(.4),stagger:.02,ease:"back.out(1.6)"});
+    cards.forEach(c=>{const o=c.o,s=c.s;c.o=0;c.s=s*.9;gsap.to(c,{o,s,duration:T(.4),ease:"back.out(1.6)"})});
   }else paintCards();
 }
 
@@ -387,7 +387,7 @@ function toDecide(){
   tl.to(C,{x:L.decide.x,y:L.decide.y,duration:T(.6),ease:"power3.inOut"},.1);
   tl.to(G,{z:L.R,duration:T(.9),ease:"power3.inOut"},.5);
   const order=cards.map((c,i)=>i).sort((a,b)=>Math.abs(norm(a*L.step))-Math.abs(norm(b*L.step)));
-  order.forEach((i,k)=>{tl.to(cards[i],{rad:L.R,ang:norm(i*L.step),tilt:0,s:1,duration:T(.95),ease:"back.out(1.05)"},.5+k*T(.035))});
+  order.forEach((i,k)=>{tl.to(cards[i],{rad:L.R,ang:norm(i*L.step),tilt:0,x:0,y:0,o:1,s:1,duration:T(.95),ease:"back.out(1.05)"},.5+k*T(.035))});
   tl.fromTo(decideUI,{autoAlpha:0},{autoAlpha:1,duration:T(.45)},.95);
 }
 go.onclick=toDecide;
@@ -415,7 +415,7 @@ function toResult(t){
   state="result";resultIdx=t;
   const w=cards[t],v=valid[w.oi];
   wheel.classList.remove("live");
-  rq.textContent=qIn.value.trim()||t("decision");ra.textContent=v.text;setC(rcard,PALETTE[v.ci]);
+  rq.textContent=qIn.value.trim()||t("decision");ra.textContent=v.text;setC(rcard,PALETTE[v.ci]);prepareShare(v);
   const tl=gsap.timeline();
   tl.to(decideUI,{autoAlpha:0,duration:T(.25)},0);
   cards.forEach(c=>{if(c!==w)tl.to(c,{o:0,s:.85,duration:T(.35),ease:"power2.in"},0)});
@@ -470,7 +470,7 @@ function collapse(){
   wheel.classList.add("flat");const tl=gsap.timeline({onComplete:()=>{state="edit";wheel.classList.add("stacked");wheel.classList.remove("flat");settle()}});
   tl.to(decideUI,{autoAlpha:0,duration:T(.25)},0);
   tl.to(G,{z:0,duration:T(.7),ease:"power3.inOut"},.05);
-  cards.forEach((c,i)=>tl.to(c,{rad:i*.6,ang:nearest(c.ang,-phi),s:L.stackScale,o:1,tilt:jitter(i),duration:T(.7),ease:"power3.inOut"},.05+i*.01));
+  cards.forEach((c,i)=>{const P=stackP(i,cards.length);tl.to(c,{rad:i*.6,ang:nearest(c.ang,-phi),s:L.stackScale*P.s,o:P.o,tilt:P.r,x:P.x,y:P.y,duration:T(.7),ease:"power3.inOut"},.05+i*.01)});
   tl.to(C,{x:L.edit.x,y:L.edit.y,duration:T(.75),ease:"power3.inOut"},.1);
   tl.to(edit,{autoAlpha:1,y:0,duration:T(.4),ease:"power2.out"},.45);
 }
@@ -481,10 +481,54 @@ function toEdit(){
 }
 $("back").onclick=toEdit;$("edit2").onclick=toEdit;
 
+let shareFile=null;
+function wrapLines(x,text,maxW){
+  const out=[];let cur="";
+  for(let w of text.split(/\s+/).filter(Boolean)){
+    while(x.measureText(w).width>maxW&&w.length>1){let k=w.length;while(k>1&&x.measureText(w.slice(0,k)).width>maxW)k--;if(cur){out.push(cur);cur=""}out.push(w.slice(0,k));w=w.slice(k)}
+    const test=cur?cur+" "+w:w;
+    if(!cur||x.measureText(test).width<=maxW)cur=test;else{out.push(cur);cur=w}
+  }
+  if(cur)out.push(cur);return out;
+}
+async function prepareShare(v){
+  shareFile=null;
+  try{
+    await Promise.all([document.fonts.load('800 100px "Manrope"'),document.fonts.load('600 40px "Manrope"'),document.fonts.load('700 34px "Manrope"')]);
+    const W=1080,H=1350,pad=96,maxW=W-pad*2,cv=document.createElement("canvas");cv.width=W;cv.height=H;
+    const x=cv.getContext("2d"),p=PALETTE[v.ci];
+    x.fillStyle="#F8F7F5";x.fillRect(0,0,W,H);
+    x.save();x.translate(W/2,H+60);x.scale(1,.78);
+    const g=x.createRadialGradient(0,0,0,0,0,980);
+    g.addColorStop(0,p[2]);g.addColorStop(.18,p[2]);g.addColorStop(.36,p[1]);g.addColorStop(.6,p[0]);g.addColorStop(.84,p[0]+"00");
+    x.fillStyle=g;x.beginPath();x.arc(0,0,980,0,Math.PI*2);x.fill();x.restore();
+    const n=document.createElement("canvas");n.width=n.height=160;const nx=n.getContext("2d"),id=nx.createImageData(160,160);
+    for(let i=0;i<id.data.length;i+=4){const c=Math.random()*255;id.data[i]=id.data[i+1]=id.data[i+2]=c;id.data[i+3]=12}
+    nx.putImageData(id,0,0);x.fillStyle=x.createPattern(n,"repeat");x.fillRect(0,H*.45,W,H*.55);
+    x.textBaseline="alphabetic";x.textAlign="left";
+    x.fillStyle="#6E6766";x.font='600 40px "Manrope", sans-serif';
+    let q=qIn.value.trim()||t("decision");
+    if(x.measureText(q).width>maxW){while(q.length>1&&x.measureText(q+"…").width>maxW)q=q.slice(0,-1);q+="…"}
+    x.fillText(q,pad,pad+40);
+    const top=pad+40+56,maxH=640;let fs=170,lines=[v.text];
+    x.fillStyle="#231F20";
+    for(;fs>=44;fs-=6){x.font=`800 ${fs}px "Manrope", sans-serif`;lines=wrapLines(x,v.text,maxW);if(lines.length*fs<=maxH)break}
+    lines.forEach((l,i)=>x.fillText(l,pad,top+fs*.88+i*fs));
+    x.font='700 34px "Manrope", sans-serif';x.fillText(t("fallbackQ"),pad,H-pad+10);
+    if(!/claude/.test(location.host)){x.font='600 28px "Manrope", sans-serif';x.textAlign="right";x.fillText((location.host+location.pathname).replace(/\/$/,""),W-pad,H-pad+10)}
+    const blob=await new Promise(r=>cv.toBlob(r,"image/png"));
+    if(blob)shareFile=new File([blob],"decision.png",{type:"image/png"});
+  }catch(e){shareFile=null}
+}
 $("share").onclick=async e=>{
   const b=e.currentTarget,q=qIn.value.trim(),text=(q?q+" ":"")+ra.textContent+".";
-  try{if(navigator.share){await navigator.share({text});return}}catch(err){if(err&&err.name==="AbortError")return}
-  try{await navigator.clipboard.writeText(text);b.textContent=t("copied");setTimeout(()=>b.textContent=t("share"),1600)}catch(err){b.textContent=t("copyFail")}
+  const flash=k=>{b.textContent=t(k);setTimeout(()=>b.textContent=t("share"),1600)};
+  try{
+    if(shareFile&&navigator.canShare&&navigator.canShare({files:[shareFile]})){await navigator.share({files:[shareFile]});return}
+    if(navigator.share){await navigator.share({text});return}
+  }catch(err){if(err&&err.name==="AbortError")return}
+  if(shareFile){try{const u=URL.createObjectURL(shareFile),a=document.createElement("a");a.href=u;a.download="decision.png";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);flash("saved");return}catch(err){}}
+  try{await navigator.clipboard.writeText(text);flash("copied")}catch(err){b.textContent=t("copyFail")}
 };
 
 /* drag / flick: horizontal drag turns the drum */
@@ -511,7 +555,7 @@ addEventListener("resize",()=>{if(state!=="busy")applyLayout(false)});
 qIn.value=t("defQ");updQclr();applyLang();
 computeValid();renderList();layout();buildCards();builtN=valid.length;stackPose();C.x=L.edit.x;C.y=L.edit.y;wheel.classList.add("stacked");
 document.fonts&&document.fonts.ready.then(paintCards);
-if(!reduce){cards.forEach(c=>{c.o=0;c.s=L.stackScale*.9});gsap.to(cards,{o:1,s:L.stackScale,duration:.7,stagger:.05,ease:"power3.out",delay:.2})}
+if(!reduce){cards.forEach((c,i)=>{const o=c.o,s=c.s;c.o=0;c.s=s*.9;gsap.to(c,{o,s,duration:.7,delay:.2+i*.05,ease:"power3.out"})})}
 </script>
 </body>
 </html>
