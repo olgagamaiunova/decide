@@ -507,7 +507,7 @@ function wrapLines(x,text,maxW){
 async function prepareShare(v){
   shareFile=null;
   try{
-    await Promise.all([document.fonts.load('800 100px "Manrope"'),document.fonts.load('600 40px "Manrope"'),document.fonts.load('700 34px "Manrope"')]);
+    await Promise.all([document.fonts.load('800 100px "Manrope"'),document.fonts.load('600 40px "Manrope"'),document.fonts.load('700 32px "Manrope"'),document.fonts.load('500 32px "Manrope"')]);
     const W=1080,H=1350,pad=96,maxW=W-pad*2,cv=document.createElement("canvas");cv.width=W;cv.height=H;
     const x=cv.getContext("2d"),p=PALETTE[v.ci];
     x.fillStyle="#F8F7F5";x.fillRect(0,0,W,H);
@@ -516,8 +516,12 @@ async function prepareShare(v){
     g.addColorStop(0,p[2]);g.addColorStop(.18,p[2]);g.addColorStop(.36,p[1]);g.addColorStop(.6,p[0]);g.addColorStop(.84,p[0]+"00");
     x.fillStyle=g;x.beginPath();x.arc(0,0,980,0,Math.PI*2);x.fill();x.restore();
     const n=document.createElement("canvas");n.width=n.height=160;const nx=n.getContext("2d"),id=nx.createImageData(160,160);
-    for(let i=0;i<id.data.length;i+=4){const c=Math.random()*255;id.data[i]=id.data[i+1]=id.data[i+2]=c;id.data[i+3]=12}
-    nx.putImageData(id,0,0);x.fillStyle=x.createPattern(n,"repeat");x.fillRect(0,H*.45,W,H*.55);
+    for(let i=0;i<id.data.length;i+=4){const c=128+(Math.random()-.5)*120;id.data[i]=id.data[i+1]=id.data[i+2]=c;id.data[i+3]=255}
+    nx.putImageData(id,0,0);
+    const gl=document.createElement("canvas");gl.width=W;gl.height=H;const gx=gl.getContext("2d");
+    gx.fillStyle=gx.createPattern(n,"repeat");gx.fillRect(0,0,W,H);
+    gx.globalCompositeOperation="destination-in";const fade=gx.createLinearGradient(0,H*.5,0,H);fade.addColorStop(0,"rgba(0,0,0,0)");fade.addColorStop(1,"rgba(0,0,0,1)");gx.fillStyle=fade;gx.fillRect(0,0,W,H);
+    x.save();x.globalCompositeOperation="soft-light";x.globalAlpha=.35;x.drawImage(gl,0,0);x.restore();
     x.textBaseline="alphabetic";x.textAlign="left";
     x.fillStyle="#6E6766";x.font='600 40px "Manrope", sans-serif';
     let q=qIn.value.trim()||t("decision");
@@ -527,8 +531,8 @@ async function prepareShare(v){
     x.fillStyle="#231F20";
     for(;fs>=44;fs-=6){x.font=`800 ${fs}px "Manrope", sans-serif`;lines=wrapLines(x,v.text,maxW);if(lines.length*fs<=maxH)break}
     lines.forEach((l,i)=>x.fillText(l,pad,top+fs*.88+i*fs));
-    x.font='700 34px "Manrope", sans-serif';x.fillText(t("fallbackQ"),pad,H-pad+10);
-    if(!/claude/.test(location.host)){x.font='600 28px "Manrope", sans-serif';x.textAlign="right";x.fillText((location.host+location.pathname).replace(/\/$/,""),W-pad,H-pad+10)}
+    x.font='700 32px "Manrope", sans-serif';x.fillStyle="#231F20";x.fillText("Let’s decide",pad,H-pad+10);
+    const lw=x.measureText("Let’s decide ").width;x.font='500 32px "Manrope", sans-serif';x.fillStyle="rgba(35,31,32,.72)";x.fillText("by Olga Gamaiunova",pad+lw,H-pad+10);
     const blob=await new Promise(r=>cv.toBlob(r,"image/png"));
     if(blob)shareFile=new File([blob],"decision.png",{type:"image/png"});
   }catch(e){shareFile=null}
