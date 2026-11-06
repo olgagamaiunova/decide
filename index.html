@@ -262,13 +262,13 @@ function fitName(el){
   while(fs>min&&over()){fs*=.92;sp.style.fontSize=fs+"px"}
   if(over())sp.style.overflowWrap="anywhere";
 }
-const STACK=[{r:0,x:0,y:0,s:1,o:1},{r:-6,x:-18,y:-8,s:.97,o:.55},{r:-12,x:-34,y:-12,s:.94,o:.3},{r:-12,x:-34,y:-12,s:.94,o:0}];
-const stackP=(i,N)=>STACK[Math.min(N-1-i,3)];
-function stackPose(){G.z=0;const N=cards.length;cards.forEach((c,i)=>{const P=stackP(i,N);c.rad=i*.6;c.ang=-phi;c.tilt=P.r;c.x=P.x;c.y=P.y;c.s=L.stackScale*P.s;c.o=P.o})}
+const STACK=[{r:0,x:0,y:0,s:1,o:1},{r:-6,x:-18,y:-8,s:.97,o:.55},{r:-12,x:-34,y:-12,s:.94,o:.3},{r:0,x:0,y:0,s:1,o:0}];
+const stackP=(i,N)=>STACK[Math.min(i,3)];
+function stackPose(){G.z=0;const N=cards.length;cards.forEach((c,i)=>{const P=stackP(i,N);c.rad=(N-i)*.6;c.ang=-phi;c.tilt=P.r;c.x=P.x;c.y=P.y;c.s=L.stackScale*P.s;c.o=P.o})}
 function revealStack(intro){
   const N=cards.length;
   cards.forEach((c,i)=>{
-    const P=stackP(i,N),k=N-1-i;
+    const P=stackP(i,N),k=i;
     gsap.killTweensOf(c);
     if(reduce||P.o===0)return;
     if(intro){
@@ -284,7 +284,7 @@ function updateOn(){
   if(!cards.length)return;
   let t;
   if(resultIdx>=0)t=resultIdx;
-  else if(state==="edit")t=cards.length-1;
+  else if(state==="edit")t=0;
   else t=((Math.round(-phi/L.step)%L.S)+L.S)%L.S;
   if(t!==onIdx){if(cards[onIdx])cards[onIdx].el.classList.remove("on");onIdx=t;if(cards[t])cards[t].el.classList.add("on")}
 }
@@ -392,7 +392,7 @@ function toDecide(){
   state="busy";wheel.classList.add("flat");wheel.classList.remove("stacked");
   const prevS=L.S;layout();
   if(cards.length!==L.S||prevS!==L.S){buildCards();phi=0;stackPose();C.x=L.edit.x;C.y=L.edit.y}
-  phi=0;G.z=0;cards.forEach((c,i)=>{c.ang=0;c.rad=i*.6});
+  phi=0;G.z=0;cards.forEach((c,i)=>{c.ang=0;c.rad=(cards.length-i)*.6;if(c.o<.01)c.o=1});
   dq.textContent=qIn.value.trim()||t("fallbackQ");
   spinBtn.disabled=false;
   gsap.to(edit,{autoAlpha:0,y:-18,duration:T(.35),ease:"power2.in"});
@@ -448,13 +448,14 @@ function fitAnswer(){
 function morphIn(w){
   const f=w.el.getBoundingClientRect(),R=resultRect(),sx=f.width/R.w,sy=f.height/R.h;
   gsap.set([".r-top",".r-bottom"],{opacity:0,y:14});
-  gsap.set(rcard,{left:R.x,top:R.y,width:R.w,height:R.h,autoAlpha:1,x:f.left-R.x,y:f.top-R.y,scaleX:sx,scaleY:sy,borderRadius:(L.cw*.15)/sx});
-  fitAnswer();gsap.set(raura,{yPercent:24,scale:.85});
-  w.o=0;
+  gsap.set(rcard,{left:R.x,top:R.y,width:R.w,height:R.h,visibility:"visible",opacity:0,x:f.left-R.x,y:f.top-R.y,scaleX:sx,scaleY:sy,borderRadius:(L.cw*.15)/sx});
+  fitAnswer();gsap.set(raura,{yPercent:2,scale:1});
   const tl=gsap.timeline({onComplete:()=>{if(!reduce)breath=gsap.to(raura,{yPercent:-10,scale:1.1,duration:3.2,ease:"sine.inOut",yoyo:true,repeat:-1})}});
-  tl.to(rcard,{x:0,y:0,scaleX:1,scaleY:1,borderRadius:34,duration:T(.8),ease:"power3.inOut"},0);
-  tl.to(raura,{yPercent:-4,scale:1.04,duration:T(1.1),ease:"power2.out"},.15);
-  tl.to([".r-top",".r-bottom"],{opacity:1,y:0,duration:T(.3),stagger:.05,ease:"power2.out"},T(.32));
+  tl.to(rcard,{opacity:1,duration:T(.14),ease:"none"},0);
+  tl.call(()=>{w.o=0},null,T(.14));
+  tl.to(rcard,{x:0,y:0,scaleX:1,scaleY:1,borderRadius:34,duration:T(.65),ease:"power3.inOut"},T(.1));
+  tl.to(raura,{yPercent:-4,scale:1.04,duration:T(1),ease:"power2.out"},T(.2));
+  tl.to([".r-top",".r-bottom"],{opacity:1,y:0,duration:T(.28),stagger:.05,ease:"power2.out"},T(.62));
 }
 function morphOut(done){
   const w=cards[resultIdx];if(breath){breath.kill();breath=null}
@@ -483,7 +484,7 @@ function collapse(){
   wheel.classList.add("flat");const tl=gsap.timeline({onComplete:()=>{state="edit";wheel.classList.add("stacked");wheel.classList.remove("flat");settle()}});
   tl.to(decideUI,{autoAlpha:0,duration:T(.25)},0);
   tl.to(G,{z:0,duration:T(.7),ease:"power3.inOut"},.05);
-  cards.forEach((c,i)=>{const P=stackP(i,cards.length);tl.to(c,{rad:i*.6,ang:nearest(c.ang,-phi),s:L.stackScale*P.s,o:P.o,tilt:P.r,x:P.x,y:P.y,duration:T(.7),ease:"power3.inOut"},.05+i*.01)});
+  cards.forEach((c,i)=>{const P=stackP(i,cards.length);tl.to(c,{rad:(cards.length-i)*.6,ang:nearest(c.ang,-phi),s:L.stackScale*P.s,o:P.o,tilt:P.r,x:P.x,y:P.y,duration:T(.7),ease:"power3.inOut"},.05+i*.01)});
   tl.to(C,{x:L.edit.x,y:L.edit.y,duration:T(.75),ease:"power3.inOut"},.1);
   tl.to(edit,{autoAlpha:1,y:0,duration:T(.4),ease:"power2.out"},.45);
 }
@@ -532,7 +533,7 @@ async function prepareShare(v){
     for(;fs>=44;fs-=6){x.font=`800 ${fs}px "Manrope", sans-serif`;lines=wrapLines(x,v.text,maxW);if(lines.length*fs<=maxH)break}
     lines.forEach((l,i)=>x.fillText(l,pad,top+fs*.88+i*fs));
     x.font='700 32px "Manrope", sans-serif';x.fillStyle="#231F20";x.fillText("Let’s decide",pad,H-pad+10);
-    const lw=x.measureText("Let’s decide ").width;x.font='500 32px "Manrope", sans-serif';x.fillStyle="rgba(35,31,32,.72)";x.fillText("by Olga Gamaiunova",pad+lw,H-pad+10);
+    x.font='500 32px "Manrope", sans-serif';x.fillStyle="rgba(35,31,32,.72)";x.textAlign="right";x.fillText("by Olga Gamaiunova",W-pad,H-pad+10);x.textAlign="left";
     const blob=await new Promise(r=>cv.toBlob(r,"image/png"));
     if(blob)shareFile=new File([blob],"decision.png",{type:"image/png"});
   }catch(e){shareFile=null}
