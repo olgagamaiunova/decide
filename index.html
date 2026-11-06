@@ -265,6 +265,19 @@ function fitName(el){
 const STACK=[{r:0,x:0,y:0,s:1,o:1},{r:-6,x:-18,y:-8,s:.97,o:.55},{r:-12,x:-34,y:-12,s:.94,o:.3},{r:-12,x:-34,y:-12,s:.94,o:0}];
 const stackP=(i,N)=>STACK[Math.min(N-1-i,3)];
 function stackPose(){G.z=0;const N=cards.length;cards.forEach((c,i)=>{const P=stackP(i,N);c.rad=i*.6;c.ang=-phi;c.tilt=P.r;c.x=P.x;c.y=P.y;c.s=L.stackScale*P.s;c.o=P.o})}
+function revealStack(intro){
+  const N=cards.length;
+  cards.forEach((c,i)=>{
+    const P=stackP(i,N),k=N-1-i;
+    gsap.killTweensOf(c);
+    if(reduce||P.o===0)return;
+    if(intro){
+      c.o=0;c.x=0;c.y=16;c.tilt=0;
+      if(k===0)gsap.to(c,{o:1,y:0,duration:.7,delay:.15,ease:"power2.out"});
+      else gsap.to(c,{o:P.o,x:P.x,y:P.y,tilt:P.r,duration:.9,delay:.55+k*.1,ease:"power3.out"});
+    }else{c.o=0;gsap.to(c,{o:P.o,duration:.35,ease:"power1.out"})}
+  });
+}
 
 let onIdx=-1,resultIdx=-1;
 function updateOn(){
@@ -350,7 +363,7 @@ function refresh(){
   layout();
   if(cards.length!==L.S||builtN!==valid.length){
     builtN=valid.length;buildCards();stackPose();C.x=L.edit.x;C.y=L.edit.y;
-    cards.forEach(c=>{const o=c.o,s=c.s;c.o=0;c.s=s*.9;gsap.to(c,{o,s,duration:T(.4),ease:"back.out(1.6)"})});
+    revealStack(false);
   }else paintCards();
 }
 
@@ -555,7 +568,7 @@ addEventListener("resize",()=>{if(state!=="busy")applyLayout(false)});
 qIn.value=t("defQ");updQclr();applyLang();
 computeValid();renderList();layout();buildCards();builtN=valid.length;stackPose();C.x=L.edit.x;C.y=L.edit.y;wheel.classList.add("stacked");
 document.fonts&&document.fonts.ready.then(paintCards);
-if(!reduce){cards.forEach((c,i)=>{const o=c.o,s=c.s;c.o=0;c.s=s*.9;gsap.to(c,{o,s,duration:.7,delay:.2+i*.05,ease:"power3.out"})})}
+revealStack(true);
 </script>
 </body>
 </html>
