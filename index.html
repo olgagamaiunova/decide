@@ -131,6 +131,19 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .snd{position:fixed;z-index:6;right:calc(16px + 2vw);top:calc(env(safe-area-inset-top,0px) + 18px)}
 
 .hint:empty{display:none}
+.lang{position:absolute;top:calc(env(safe-area-inset-top,0px) + 18px);right:calc(16px + 2vw);z-index:2;display:flex;padding:3px;border-radius:999px;background:var(--ghost)}
+.lang button{border:0;background:transparent;height:34px;min-width:42px;padding:0 10px;border-radius:999px;font-weight:700;font-size:13px;color:var(--ink-soft);transition:background .2s,color .2s}
+.lang button[aria-pressed="true"]{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(35,31,32,.1)}
+.title{white-space:pre-line}
+.qwrap{position:relative}
+.qwrap .q{padding-right:46px}
+.clr{position:absolute;right:0;top:3px;width:38px;height:38px;border:0;border-radius:50%;background:transparent;color:var(--ink-soft);display:grid;place-items:center;transition:background .2s}
+.clr:hover{background:var(--line)}
+.clr svg{width:12px;height:12px}
+.clr[hidden]{display:none}
+.lblrow{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.clearall{border:0;background:transparent;padding:4px 0;font-weight:600;font-size:14px;color:var(--ink-soft);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line);transition:color .2s}
+.clearall:hover{color:var(--ink)}
 @media (max-width:899px){
   .edit{padding:calc(env(safe-area-inset-top,0px) + 76px) 6vw 0}
   .edit-inner{max-width:none}
@@ -139,21 +152,26 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
   .opt{height:54px}
   .actions{position:sticky;bottom:0;z-index:1;margin:8px -6vw 0;padding:22px 6vw calc(env(safe-area-inset-bottom,0px) + 18px);background:linear-gradient(to top,var(--paper) 70%,color-mix(in srgb,var(--paper) 0%,transparent))}
   .actions .primary{flex:1}
+  .dq{text-align:left;margin:0;max-width:none;padding:0 calc(16px + 2vw)}
+  .hub{align-items:stretch;padding:0 calc(16px + 2vw)}
+  .hub .spin{width:auto}
+  .dhint{text-align:left;max-width:none}
 }
 </style>
 </head>
 <body>
 
 <main class="edit" id="edit">
+  <div class="lang" role="group" aria-label="Language"><button type="button" data-l="en">EN</button><button type="button" data-l="ru">RU</button><button type="button" data-l="sr">SR</button></div>
   <div class="edit-inner">
-    <h1 class="title">Let’s<br>decide</h1>
-    <label class="lbl" for="q">Problem of the day…</label>
-    <input id="q" class="q" value="What’s for dinner?" maxlength="60" autocomplete="off">
-    <span class="lbl" id="optsLbl">Options…</span>
+    <h1 class="title" data-t="title"></h1>
+    <label class="lbl" for="q" data-t="qLabel"></label>
+    <div class="qwrap"><input id="q" class="q" maxlength="80" autocomplete="off"><button class="clr" id="qclr" type="button"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></div>
+    <div class="lblrow"><span class="lbl" id="optsLbl" data-t="optsLabel"></span><button class="clearall" id="clearAll" type="button" data-t="clearAll"></button></div>
     <ul class="opts" id="opts" aria-labelledby="optsLbl"></ul>
-    <button class="add" id="add" type="button"><span class="plus" aria-hidden="true">+</span><span id="addLbl">Add option</span></button>
+    <button class="add" id="add" type="button"><span class="plus" aria-hidden="true">+</span><span id="addLbl"></span></button>
     <div class="actions">
-      <button class="primary" id="go" type="button">Deal the cards</button>
+      <button class="primary" id="go" type="button" data-t="deal"></button>
       <span class="hint" id="hint" role="status"></span>
     </div>
   </div>
@@ -163,9 +181,9 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 <div class="wheel" id="wheel" aria-hidden="true"></div>
 
 <div class="decide-ui" id="decideUI">
-  <button class="ghost tl" id="back" type="button">Change options</button>
+  <button class="ghost tl" id="back" type="button" data-t="change"></button>
   <h2 class="dq" id="dq"></h2>
-  <div class="hub" id="hub"><p class="dhint" id="dhint"></p><button class="primary spin" id="spin" type="button">Spin</button></div>
+  <div class="hub" id="hub"><p class="dhint" id="dhint"></p><button class="primary spin" id="spin" type="button" data-t="spin"></button></div>
 </div>
 
 <section class="rcard" id="rcard" aria-live="polite">
@@ -176,8 +194,8 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
     <div class="r-a" id="ra"></div>
   </div>
   <div class="r-bottom">
-    <button class="r-again" id="again" type="button">Spin again</button>
-    <div class="r-seg"><button id="share" type="button">Share</button><span aria-hidden="true"></span><button id="edit2" type="button">Change options</button></div>
+    <button class="r-again" id="again" type="button" data-t="again"></button>
+    <div class="r-seg"><button id="share" type="button" data-t="share"></button><span aria-hidden="true"></span><button id="edit2" type="button" data-t="change"></button></div>
   </div>
 </section>
 
@@ -191,14 +209,22 @@ const $=id=>document.getElementById(id);
 const edit=$("edit"),wheel=$("wheel"),decideUI=$("decideUI"),rcard=$("rcard"),raura=$("raura"),bloom=$("bloom");
 const qIn=$("q"),ul=$("opts"),addBtn=$("add"),go=$("go"),hint=$("hint"),dq=$("dq"),spinBtn=$("spin"),dhint=$("dhint"),rq=$("rq"),ra=$("ra");
 
-let options=[{id:1,text:"Pizza",ci:0},{id:2,text:"Noodles",ci:1},{id:3,text:"Tacos",ci:2}],nextId=4;
+const I18N={
+ en:{title:"Let’s\ndecide",qLabel:"Problem of the day…",defQ:"What’s for dinner?",optsLabel:"Options…",clearAll:"Clear all",opt:"Option",add:"Add option",max:"That’s plenty",deal:"Deal the cards",needTwo:"Add at least two options",change:"Change options",hintTouch:"Flick the cards or shake your phone",hintDesk:"Drag the cards, press Spin or hit Space",spin:"Spin",again:"Spin again",share:"Share",copied:"Copied",copyFail:"Couldn’t copy",clear:"Clear",remove:"Remove option",fallbackQ:"Let’s decide",decision:"Decision",defOpts:["Pizza","Noodles","Tacos"]},
+ ru:{title:"Давай\nрешим",qLabel:"Вопрос дня…",defQ:"Что на ужин?",optsLabel:"Варианты…",clearAll:"Очистить всё",opt:"Вариант",add:"Добавить вариант",max:"Вариантов достаточно",deal:"Раздать карты",needTwo:"Нужно хотя бы два варианта",change:"Изменить варианты",hintTouch:"Смахни карты или потряси телефон",hintDesk:"Потяни карты, нажми «Крутить» или пробел",spin:"Крутить",again:"Ещё раз",share:"Поделиться",copied:"Скопировано",copyFail:"Не получилось скопировать",clear:"Очистить",remove:"Удалить вариант",fallbackQ:"Давай решим",decision:"Решение",defOpts:["Пицца","Лапша","Тако"]},
+ sr:{title:"Hajde da\nodlučimo",qLabel:"Pitanje dana…",defQ:"Šta za večeru?",optsLabel:"Opcije…",clearAll:"Obriši sve",opt:"Opcija",add:"Dodaj opciju",max:"Dovoljno opcija",deal:"Podeli karte",needTwo:"Dodaj bar dve opcije",change:"Promeni opcije",hintTouch:"Povuci karte ili protresi telefon",hintDesk:"Povuci karte, pritisni „Zavrti“ ili razmak",spin:"Zavrti",again:"Ponovo",share:"Podeli",copied:"Kopirano",copyFail:"Kopiranje nije uspelo",clear:"Obriši",remove:"Ukloni opciju",fallbackQ:"Hajde da odlučimo",decision:"Odluka",defOpts:["Pica","Nudle","Tako"]}
+};
+let lang=(()=>{try{const v=localStorage.getItem("decide-lang");if(I18N[v])return v}catch(e){}const n=(navigator.language||"en").slice(0,2).toLowerCase();return n==="ru"?"ru":["sr","hr","bs","sh"].includes(n)?"sr":"en"})();
+const t=k=>I18N[lang][k];
+const MAX_OPTS=20;
+let options=I18N[lang].defOpts.map((text,i)=>({id:i+1,text,ci:i})),nextId=4;
 let valid=[],cards=[],L={},C={x:0,y:0},G={z:0};
 let phi=0,state="edit",drifting=false,dragging=false,spinning=false,lastTickIdx=null;
 gsap.set(bloom,{xPercent:-50,yPercent:-50});
 
 function hash(s){let h=7;for(const ch of s.toLowerCase())h=(h*31+ch.codePointAt(0))>>>0;return h}
 function computeValid(){valid=options.filter(o=>o.text.trim()).map(o=>({text:o.text.trim(),ci:o.ci,id:o.id}))}
-function freeColor(){const used=new Set(options.map(o=>o.ci));return COLOR_ORDER.find(i=>!used.has(i))??0}
+function freeColor(){const cnt=PALETTE.map(()=>0);options.forEach(o=>cnt[o.ci]++);let best=0;cnt.forEach((c,i)=>{if(c<cnt[best])best=i});return best}
 const jitter=i=>((hash("j"+i)%15)-7)*.7;
 const nearest=(from,to)=>from+((((to-from)%360)+540)%360-180);
 const norm=a=>{a=((a%360)+360)%360;return a>180?a-360:a};
@@ -213,7 +239,7 @@ function layout(){
      decide:{x:vw/2,y:mobile?vh*.47:vh*.5}};
   wheel.style.perspective=Math.max(900,R*3.2)+"px";
   wheel.style.setProperty("--cw",cw+"px");wheel.style.setProperty("--ch",ch+"px");
-  dhint.textContent=matchMedia("(pointer:coarse)").matches?"Flick the cards or shake your phone":"Drag the cards, press Spin or hit Space";
+  dhint.textContent=t(matchMedia("(pointer:coarse)").matches?"hintTouch":"hintDesk");
 }
 
 function buildCards(){
@@ -275,24 +301,46 @@ function renderList(focusIdx){
   ul.innerHTML="";
   options.forEach((o,idx)=>{
     const li=document.createElement("li");li.className="opt";
-    li.innerHTML=`<span class="dot"></span><input aria-label="Option ${idx+1}" placeholder="Option ${idx+1}" maxlength="80" autocomplete="off"><button class="rm" type="button" aria-label="Remove option ${idx+1}"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button>`;
+    const lab=t("opt")+" "+(idx+1);
+    li.innerHTML=`<span class="dot"></span><input aria-label="${lab}" placeholder="${lab}" maxlength="80" autocomplete="off"><button class="rm" type="button" aria-label="${options.length>2?t("remove"):t("clear")}: ${lab}"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button>`;
     const inp=li.querySelector("input");inp.value=o.text;
     inp.addEventListener("input",()=>{o.text=inp.value;refresh()});
     inp.addEventListener("keydown",e=>{
-      if(e.key==="Enter"){e.preventDefault();if(idx===options.length-1&&options.length<8)addOption();else{const nx=ul.querySelectorAll("input")[idx+1];nx?nx.focus():go.focus()}}
+      if(e.key==="Enter"){e.preventDefault();if(idx===options.length-1&&options.length<MAX_OPTS)addOption();else{const nx=ul.querySelectorAll("input")[idx+1];nx?nx.focus():go.focus()}}
       if(e.key==="Backspace"&&!inp.value&&options.length>2){e.preventDefault();options.splice(idx,1);renderList(Math.max(0,idx-1));refresh()}
     });
-    const rm=li.querySelector(".rm");rm.style.visibility=options.length>2?"visible":"hidden";
-    rm.onclick=()=>{options.splice(idx,1);renderList();refresh()};
+    const rm=li.querySelector(".rm");
+    rm.onclick=()=>{if(options.length>2){options.splice(idx,1);renderList();refresh()}else{o.text="";inp.value="";inp.focus();refresh()}};
     ul.appendChild(li);
   });
-  addBtn.disabled=options.length>=8;
-  $("addLbl").textContent=options.length>=8?"Eight is plenty":"Add option";
+  addBtn.disabled=options.length>=MAX_OPTS;
+  $("addLbl").textContent=t(options.length>=MAX_OPTS?"max":"add");
   paintDots();
   if(focusIdx!=null)ul.querySelectorAll("input")[focusIdx]?.focus();
 }
 function paintDots(){const dots=ul.querySelectorAll(".dot");options.forEach((o,i)=>{if(dots[i])setC(dots[i],PALETTE[o.ci])})}
 function addOption(){options.push({id:nextId++,text:"",ci:freeColor()});renderList(options.length-1);refresh()}
+const qclr=$("qclr");
+function updQclr(){qclr.hidden=!qIn.value}
+qIn.addEventListener("input",updQclr);
+qclr.onclick=()=>{qIn.value="";updQclr();qIn.focus()};
+$("clearAll").onclick=()=>{qIn.value="";updQclr();options=[{id:nextId++,text:"",ci:0},{id:nextId++,text:"",ci:1}];renderList();refresh();qIn.focus()};
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll("[data-t]").forEach(el=>{el.textContent=t(el.dataset.t)});
+  document.querySelectorAll(".lang button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.l===lang)));
+  qclr.setAttribute("aria-label",t("clear"));
+  dhint.textContent=t(matchMedia("(pointer:coarse)").matches?"hintTouch":"hintDesk");
+  if(state==="decide"||state==="busy")dq.textContent=qIn.value.trim()||t("fallbackQ");
+  renderList();
+}
+function isDefault(l){const d=I18N[l];return qIn.value===d.defQ&&options.length===d.defOpts.length&&options.every((o,i)=>o.text===d.defOpts[i])}
+document.querySelectorAll(".lang button").forEach(b=>b.onclick=()=>{
+  const nl=b.dataset.l;if(nl===lang)return;
+  const wasDef=isDefault(lang);lang=nl;try{localStorage.setItem("decide-lang",lang)}catch(e){}
+  if(wasDef){qIn.value=t("defQ");options.forEach((o,i)=>{o.text=I18N[lang].defOpts[i]})}
+  updQclr();applyLang();refresh();
+});
 addBtn.onclick=addOption;
 
 let builtN=-1;
@@ -325,16 +373,17 @@ function onShake(){if(state==="decide")spin(Math.random()<.5?1:-1,1.2);else if(s
 /* states */
 function toDecide(){
   computeValid();
-  if(valid.length<2){hint.textContent="Add at least two options";gsap.fromTo(go,{x:-8},{x:0,duration:.6,ease:"elastic.out(1,.3)"});return}
+  if(valid.length<2){hint.textContent=t("needTwo");gsap.fromTo(go,{x:-8},{x:0,duration:.6,ease:"elastic.out(1,.3)"});return}
   ensureAudio();requestMotion();
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
   state="busy";wheel.classList.add("flat");wheel.classList.remove("stacked");
   const prevS=L.S;layout();
   if(cards.length!==L.S||prevS!==L.S){buildCards();phi=0;stackPose();C.x=L.edit.x;C.y=L.edit.y}
   phi=0;G.z=0;cards.forEach((c,i)=>{c.ang=0;c.rad=i*.6});
-  dq.textContent=qIn.value.trim()||"Let’s decide";
+  dq.textContent=qIn.value.trim()||t("fallbackQ");
   spinBtn.disabled=false;
   gsap.to(edit,{autoAlpha:0,y:-18,duration:T(.35),ease:"power2.in"});
-  const tl=gsap.timeline({onComplete:()=>{state="decide";drifting=true;wheel.classList.add("live");wheel.classList.remove("flat")}});
+  const tl=gsap.timeline({onComplete:()=>{state="decide";drifting=true;wheel.classList.add("live");wheel.classList.remove("flat");settle()}});
   tl.to(C,{x:L.decide.x,y:L.decide.y,duration:T(.6),ease:"power3.inOut"},.1);
   tl.to(G,{z:L.R,duration:T(.9),ease:"power3.inOut"},.5);
   const order=cards.map((c,i)=>i).sort((a,b)=>Math.abs(norm(a*L.step))-Math.abs(norm(b*L.step)));
@@ -366,7 +415,7 @@ function toResult(t){
   state="result";resultIdx=t;
   const w=cards[t],v=valid[w.oi];
   wheel.classList.remove("live");
-  rq.textContent=qIn.value.trim()||"Decision";ra.textContent=v.text;setC(rcard,PALETTE[v.ci]);
+  rq.textContent=qIn.value.trim()||t("decision");ra.textContent=v.text;setC(rcard,PALETTE[v.ci]);
   const tl=gsap.timeline();
   tl.to(decideUI,{autoAlpha:0,duration:T(.25)},0);
   cards.forEach(c=>{if(c!==w)tl.to(c,{o:0,s:.85,duration:T(.35),ease:"power2.in"},0)});
@@ -408,7 +457,7 @@ function again(auto){
   if(state!=="result")return;state="busy";
   morphOut(()=>{
     resultIdx=-1;wheel.classList.add("flat");
-    const tl=gsap.timeline({onComplete:()=>{state="decide";drifting=true;spinBtn.disabled=false;wheel.classList.add("live");wheel.classList.remove("flat");if(auto)spin(Math.random()<.5?1:-1,1)}});
+    const tl=gsap.timeline({onComplete:()=>{state="decide";drifting=true;spinBtn.disabled=false;wheel.classList.add("live");wheel.classList.remove("flat");settle();if(auto)spin(Math.random()<.5?1:-1,1)}});
     tl.to(G,{z:L.R,duration:T(.7),ease:"power3.inOut"},0);
     cards.forEach(c=>tl.to(c,{rad:L.R,s:1,o:1,tilt:0,duration:T(.7),ease:"power3.inOut"},0));
     tl.to(decideUI,{autoAlpha:1,duration:T(.35)},.45);
@@ -418,7 +467,7 @@ $("again").onclick=()=>again(false);
 
 function collapse(){
   phi=((phi%360)+360)%360;resultIdx=-1;
-  wheel.classList.add("flat");const tl=gsap.timeline({onComplete:()=>{state="edit";wheel.classList.add("stacked");wheel.classList.remove("flat")}});
+  wheel.classList.add("flat");const tl=gsap.timeline({onComplete:()=>{state="edit";wheel.classList.add("stacked");wheel.classList.remove("flat");settle()}});
   tl.to(decideUI,{autoAlpha:0,duration:T(.25)},0);
   tl.to(G,{z:0,duration:T(.7),ease:"power3.inOut"},.05);
   cards.forEach((c,i)=>tl.to(c,{rad:i*.6,ang:nearest(c.ang,-phi),s:L.stackScale,o:1,tilt:jitter(i),duration:T(.7),ease:"power3.inOut"},.05+i*.01));
@@ -435,7 +484,7 @@ $("back").onclick=toEdit;$("edit2").onclick=toEdit;
 $("share").onclick=async e=>{
   const b=e.currentTarget,q=qIn.value.trim(),text=(q?q+" ":"")+ra.textContent+".";
   try{if(navigator.share){await navigator.share({text});return}}catch(err){if(err&&err.name==="AbortError")return}
-  try{await navigator.clipboard.writeText(text);b.textContent="Copied";setTimeout(()=>b.textContent="Share",1600)}catch(err){b.textContent="Couldn’t copy"}
+  try{await navigator.clipboard.writeText(text);b.textContent=t("copied");setTimeout(()=>b.textContent=t("share"),1600)}catch(err){b.textContent=t("copyFail")}
 };
 
 /* drag / flick: horizontal drag turns the drum */
@@ -448,15 +497,18 @@ function endDrag(){if(!dragging)return;dragging=false;const s0=samples[0],s1=sam
 wheel.addEventListener("pointerup",endDrag);wheel.addEventListener("pointercancel",endDrag);
 
 /* resize */
-addEventListener("resize",()=>{
-  const prevS=L.S;layout();paintCards();
-  if(!spinning&&L.S!==prevS&&state!=="result"){buildCards();phi=0}
+function applyLayout(animate){
+  layout();paintCards();
+  const d=animate?T(.45):0,e="power2.out";
   if(state==="edit"){stackPose();C.x=L.edit.x;C.y=L.edit.y}
-  else if(state==="decide"){C.x=L.decide.x;C.y=L.decide.y;G.z=L.R;cards.forEach((c,i)=>{if(L.S!==prevS)c.ang=norm(i*L.step);c.rad=L.R;c.s=1;c.o=1;c.tilt=0})}
-  else if(state==="result"){const R=resultRect();gsap.set(rcard,{left:R.x,top:R.y,width:R.w,height:R.h});fitAnswer()}
-});
+  else if(state==="decide"){gsap.to(C,{x:L.decide.x,y:L.decide.y,duration:d,ease:e});gsap.to(G,{z:L.R,duration:d,ease:e});cards.forEach(c=>gsap.to(c,{rad:L.R,s:1,o:1,tilt:0,duration:d,ease:e}))}
+  else if(state==="result"){C.x=L.decide.x;C.y=L.decide.y;const R=resultRect();gsap.set(rcard,{left:R.x,top:R.y,width:R.w,height:R.h});fitAnswer()}
+}
+function settle(){if(innerWidth!==L.vw||innerHeight!==L.vh)applyLayout(true)}
+addEventListener("resize",()=>{if(state!=="busy")applyLayout(false)});
 
 /* init */
+qIn.value=t("defQ");updQclr();applyLang();
 computeValid();renderList();layout();buildCards();builtN=valid.length;stackPose();C.x=L.edit.x;C.y=L.edit.y;wheel.classList.add("stacked");
 document.fonts&&document.fonts.ready.then(paintCards);
 if(!reduce){cards.forEach(c=>{c.o=0;c.s=L.stackScale*.9});gsap.to(cards,{o:1,s:L.stackScale,duration:.7,stagger:.05,ease:"power3.out",delay:.2})}
