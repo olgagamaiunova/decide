@@ -74,13 +74,14 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .card{position:absolute;left:var(--cx);top:var(--cy);width:var(--cw);height:var(--ch);border-radius:calc(var(--cw)*.15);background:#F8F7F5;
   backface-visibility:hidden;-webkit-backface-visibility:hidden;will-change:transform,opacity}
 .card::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;pointer-events:none;transition:opacity .7s ease;
-  box-shadow:0 0 0 .5px rgba(35,31,32,.03),0 22px 46px -18px rgba(35,31,32,.10),0 44px 80px -34px color-mix(in srgb,var(--c1) 60%,transparent)}
+  box-shadow:0 0 0 .5px rgba(35,31,32,.03),0 22px 46px -18px rgba(35,31,32,.10),0 40px 64px -38px color-mix(in srgb,var(--c1) 45%,transparent)}
 .face{position:absolute;inset:0;border-radius:inherit;overflow:hidden;isolation:isolate;clip-path:inset(0 round calc(var(--cw)*.15));backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .card .aura{position:absolute;left:-34%;right:-34%;bottom:-26%;height:70%;border-radius:50%;
-  background:radial-gradient(50% 50% at 50% 62%,var(--c2) 0%,color-mix(in srgb,var(--c2) 55%,var(--c1)) 16%,var(--c1) 32%,color-mix(in srgb,var(--c0) 85%,transparent) 54%,transparent 76%);
+  background:radial-gradient(50% 50% at 50% 62%,var(--c2) 0%,color-mix(in srgb,var(--c2) 55%,var(--c1)) 14%,var(--c1) 28%,color-mix(in srgb,var(--c1) 55%,var(--c0)) 40%,color-mix(in srgb,var(--c0) 70%,transparent) 52%,color-mix(in srgb,var(--c0) 35%,transparent) 63%,color-mix(in srgb,var(--c0) 12%,transparent) 73%,transparent 84%);
   transform:translateY(12%) scale(.95);transform-origin:50% 100%;opacity:.92;transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .6s}
 .wheel.flat .card::before{opacity:0}
 .wheel.m.stacked{visibility:hidden}
+.wheel.stacked .card:not(.on)::before{opacity:0}
 .card.on .aura,.wheel.live .card:hover .aura{transform:translateY(-4%) scale(1.12);opacity:1}
 .card.win .aura{transform:translateY(-12%) scale(1.25);opacity:1;animation:breathe 3.2s ease-in-out .9s infinite alternate}
 @keyframes breathe{from{transform:translateY(-12%) scale(1.25)}to{transform:translateY(-17%) scale(1.33)}}
@@ -105,7 +106,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
   transform-origin:0 0;display:flex;flex-direction:column;justify-content:space-between;color:#231F20;
   -webkit-mask-image:-webkit-radial-gradient(white,black);mask-image:radial-gradient(white,black)}
 .r-aura{position:absolute;left:-34%;right:-34%;bottom:-26%;height:70%;border-radius:50%;z-index:-2;transform-origin:50% 100%;
-  background:radial-gradient(50% 50% at 50% 60%,var(--c2) 0%,color-mix(in srgb,var(--c2) 55%,var(--c1)) 16%,var(--c1) 32%,color-mix(in srgb,var(--c0) 85%,transparent) 54%,transparent 76%);
+  background:radial-gradient(50% 50% at 50% 62%,var(--c2) 0%,color-mix(in srgb,var(--c2) 55%,var(--c1)) 14%,var(--c1) 28%,color-mix(in srgb,var(--c1) 55%,var(--c0)) 40%,color-mix(in srgb,var(--c0) 70%,transparent) 52%,color-mix(in srgb,var(--c0) 35%,transparent) 63%,color-mix(in srgb,var(--c0) 12%,transparent) 73%,transparent 84%);
   filter:blur(0px)}
 .r-ghost{position:absolute;inset:13% 12% 52%;display:flex;align-items:center;justify-content:center;text-align:center;pointer-events:none}
 .r-ghost span{display:block;max-width:100%;font-weight:800;line-height:1.05;letter-spacing:-.02em;color:#231F20}
