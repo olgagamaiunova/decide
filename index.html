@@ -80,6 +80,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
   background:radial-gradient(50% 50% at 50% 62%,var(--c2) 0%,color-mix(in srgb,var(--c2) 55%,var(--c1)) 16%,var(--c1) 32%,color-mix(in srgb,var(--c0) 85%,transparent) 54%,transparent 76%);
   transform:translateY(12%) scale(.95);transform-origin:50% 100%;opacity:.92;transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .6s}
 .wheel.flat .card::before{opacity:0}
+.wheel.m.stacked{visibility:hidden}
 .card.on .aura,.wheel.live .card:hover .aura{transform:translateY(-4%) scale(1.12);opacity:1}
 .card.win .aura{transform:translateY(-12%) scale(1.25);opacity:1;animation:breathe 3.2s ease-in-out .9s infinite alternate}
 @keyframes breathe{from{transform:translateY(-12%) scale(1.25)}to{transform:translateY(-17%) scale(1.33)}}
@@ -103,9 +104,11 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .rcard{position:fixed;z-index:5;left:0;top:0;width:100px;height:100px;border-radius:34px;background:#F8F7F5;overflow:hidden;isolation:isolate;visibility:hidden;opacity:0;
   transform-origin:0 0;display:flex;flex-direction:column;justify-content:space-between;color:#231F20;
   -webkit-mask-image:-webkit-radial-gradient(white,black);mask-image:radial-gradient(white,black)}
-.r-aura{position:absolute;left:-45%;right:-45%;bottom:-30%;height:92%;border-radius:50%;z-index:-2;transform-origin:50% 100%;
+.r-aura{position:absolute;left:-34%;right:-34%;bottom:-26%;height:70%;border-radius:50%;z-index:-2;transform-origin:50% 100%;
   background:radial-gradient(50% 50% at 50% 60%,var(--c2) 0%,color-mix(in srgb,var(--c2) 55%,var(--c1)) 16%,var(--c1) 32%,color-mix(in srgb,var(--c0) 85%,transparent) 54%,transparent 76%);
-  filter:blur(36px)}
+  filter:blur(0px)}
+.r-ghost{position:absolute;inset:13% 12% 52%;display:flex;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+.r-ghost span{display:block;max-width:100%;font-weight:800;line-height:1.05;letter-spacing:-.02em;color:#231F20}
 .r-grain{position:absolute;inset:0;z-index:-1;pointer-events:none;mix-blend-mode:soft-light;opacity:.28;background-image:var(--grain);
   -webkit-mask-image:linear-gradient(to top,#000 30%,transparent 65%);mask-image:linear-gradient(to top,#000 30%,transparent 65%)}
 .r-top{padding:30px 28px 0;flex:1;min-height:0;overflow:hidden}
@@ -187,6 +190,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 
 <section class="rcard" id="rcard" aria-live="polite">
   <div class="r-aura" id="raura"></div>
+  <div class="r-ghost" id="rghost" aria-hidden="true"><span></span></div>
   <div class="r-grain"></div>
   <div class="r-top">
     <span class="r-q" id="rq"></span>
@@ -236,7 +240,7 @@ function layout(){
   L={vw,vh,mobile,cw,ch,S,step,R,stackScale:mobile?1:1.12,
      edit:mobile?{x:vw/2,y:vh+ch}:{x:vw*.72,y:vh*.5},
      decide:{x:vw/2,y:mobile?vh*.47:vh*.5}};
-  wheel.style.perspective=Math.max(900,R*3.2)+"px";
+  wheel.style.perspective=Math.max(900,R*3.2)+"px";wheel.classList.toggle("m",mobile);
   wheel.style.setProperty("--cw",cw+"px");wheel.style.setProperty("--ch",ch+"px");
   dhint.textContent=t(matchMedia("(pointer:coarse)").matches?"hintTouch":"hintDesk");
 }
@@ -293,7 +297,7 @@ gsap.ticker.add(()=>{
   wheel.style.perspectiveOrigin=`${C.x}px ${C.y}px`;
   wheel.style.setProperty("--cx",C.x+"px");wheel.style.setProperty("--cy",C.y+"px");
   for(const c of cards){
-    const a=c.ang+phi,f=c.rad>2?Math.min(1,Math.max(0,(Math.cos(a*Math.PI/180)-.12)/.38)):1;
+    const a=c.ang+phi,f=c.rad>2?Math.min(1,Math.max(0,(Math.cos(a*Math.PI/180)-.06)/.16)):1;
     c.el.style.transform=`translate(-50%,-50%) translate(${c.x}px,${c.y}px) translateZ(${-G.z}px) rotateY(${a}deg) translateZ(${c.rad}px) rotate(${c.tilt}deg) scale(${c.s})`;
     c.el.style.opacity=c.o*f;
     c.el.style.visibility=c.o*f<.01?"hidden":"visible";
@@ -369,8 +373,9 @@ function refresh(){
 
 /* motion */
 let motionOn=false;
+let motionAsked=false;
 function requestMotion(){
-  if(motionOn)return;const D=window.DeviceMotionEvent;if(!D)return;
+  if(motionOn||motionAsked)return;motionAsked=true;const D=window.DeviceMotionEvent;if(!D)return;
   if(typeof D.requestPermission==="function"){D.requestPermission().then(r=>{if(r==="granted")listenMotion()}).catch(()=>{})}
   else if(matchMedia("(pointer:coarse)").matches)listenMotion();
 }
@@ -385,6 +390,7 @@ function onShake(){if(state==="decide")spin(Math.random()<.5?1:-1,1.2);else if(s
 
 /* states */
 function toDecide(){
+  if(state!=="edit")return;
   computeValid();
   if(valid.length<2){hint.textContent=t("needTwo");gsap.fromTo(go,{x:-8},{x:0,duration:.6,ease:"elastic.out(1,.3)"});return}
   ensureAudio();requestMotion();
@@ -403,7 +409,14 @@ function toDecide(){
   order.forEach((i,k)=>{tl.to(cards[i],{rad:L.R,ang:norm(i*L.step),tilt:0,x:0,y:0,o:1,s:1,duration:T(.95),ease:"back.out(1.05)"},.5+k*T(.035))});
   tl.fromTo(decideUI,{autoAlpha:0},{autoAlpha:1,duration:T(.45)},.95);
 }
-go.onclick=toDecide;
+go.onclick=()=>{
+  if(state!=="edit")return;
+  computeValid();
+  if(valid.length<2){hint.textContent=t("needTwo");gsap.fromTo(go,{x:-8},{x:0,duration:.6,ease:"elastic.out(1,.3)"});return}
+  requestMotion();
+  const ae=document.activeElement;
+  if(ae&&ae.tagName==="INPUT"){ae.blur();state="busy";setTimeout(()=>{state="edit";toDecide()},380)}else toDecide();
+};
 
 function spin(dir=1,vel=0){
   if(state!=="decide"||spinning)return;
@@ -414,15 +427,13 @@ function spin(dir=1,vel=0){
   const base=-t*L.step;
   const turns=(reduce?1:2)+Math.random()*.8+Math.min(1.5,vel*.6);
   const k=dir>0?Math.ceil((phi+turns*360-base)/360):Math.floor((phi-turns*360-base)/360);
-  const target=base+360*k,over=dir*L.step*.38,o={p:phi};
-  gsap.timeline({onComplete:()=>{spinning=false;toResult(t)}})
-    .to(o,{p:target+over,duration:T(4.3),ease:"power3.out",onUpdate:()=>{phi=o.p}})
-    .to(o,{p:target,duration:T(.75),ease:"sine.inOut",onUpdate:()=>{phi=o.p}});
+  const target=base+360*k,o={p:phi};
+  gsap.to(o,{p:target,duration:T(4.4),ease:"power4.out",onUpdate:()=>{phi=o.p},onComplete:()=>{phi=target;gsap.delayedCall(T(.3),()=>{spinning=false;toResult(t)})}});
 }
 spinBtn.onclick=()=>spin(Math.random()<.5?1:-1,0);
 addEventListener("keydown",e=>{if(e.code==="Space"&&state==="decide"&&document.activeElement.tagName!=="INPUT"&&document.activeElement.tagName!=="BUTTON"){e.preventDefault();spin(1,0)}});
 
-function resultRect(){const vw=innerWidth,vh=innerHeight,touch=matchMedia("(pointer:coarse)").matches,w=Math.min(460,vw-32),h=Math.min(Math.max(480,vh*.76),vh-(touch?130:48),760);return{w,h,x:(vw-w)/2,y:Math.max(16,(vh-h)/2-(touch?34:0))}}
+function resultRect(){const vw=innerWidth,vh=innerHeight,touch=matchMedia("(pointer:coarse)").matches,maxH=vh-(touch?130:48);let w=Math.min(460,vw-32),h=w*1.6;if(h>maxH){h=maxH;w=h/1.6}return{w,h,x:(vw-w)/2,y:Math.max(16,(vh-h)/2-(touch?34:0))}}
 let breath=null;
 function toResult(t){
   state="result";resultIdx=t;
@@ -445,26 +456,33 @@ function fitAnswer(){
   while(fs>18&&over()){fs*=.92;ra.style.fontSize=fs+"px"}
   if(over())ra.style.overflowWrap="anywhere";
 }
+const rghost=$("rghost");
 function morphIn(w){
-  const f=w.el.getBoundingClientRect(),R=resultRect(),sx=f.width/R.w,sy=f.height/R.h;
-  gsap.set([".r-top",".r-bottom"],{opacity:0,y:14});
-  gsap.set(rcard,{left:R.x,top:R.y,width:R.w,height:R.h,visibility:"visible",opacity:0,x:f.left-R.x,y:f.top-R.y,scaleX:sx,scaleY:sy,borderRadius:(L.cw*.15)/sx});
-  fitAnswer();gsap.set(raura,{yPercent:2,scale:1});
-  const tl=gsap.timeline({onComplete:()=>{if(!reduce)breath=gsap.to(raura,{yPercent:-10,scale:1.1,duration:3.2,ease:"sine.inOut",yoyo:true,repeat:-1})}});
-  tl.to(rcard,{opacity:1,duration:T(.14),ease:"none"},0);
-  tl.call(()=>{w.o=0},null,T(.14));
-  tl.to(rcard,{x:0,y:0,scaleX:1,scaleY:1,borderRadius:34,duration:T(.65),ease:"power3.inOut"},T(.1));
-  tl.to(raura,{yPercent:-4,scale:1.04,duration:T(1),ease:"power2.out"},T(.2));
-  tl.to([".r-top",".r-bottom"],{opacity:1,y:0,duration:T(.28),stagger:.05,ease:"power2.out"},T(.62));
+  const f=w.el.getBoundingClientRect(),R=resultRect(),sc=f.width/R.w;
+  const nameFs=parseFloat(w.el.querySelector(".name span").style.fontSize)||L.cw*.15;
+  rghost.firstChild.textContent=valid[w.oi].text;rghost.firstChild.style.fontSize=(nameFs/sc)+"px";
+  gsap.set(rghost,{opacity:1});
+  gsap.set([".r-top",".r-bottom"],{opacity:0,y:10});
+  gsap.set(rcard,{left:R.x,top:R.y,width:R.w,height:R.h,visibility:"visible",opacity:0,x:f.left-R.x,y:f.top-R.y,scale:sc,borderRadius:(L.cw*.15)/sc});
+  fitAnswer();
+  gsap.set(raura,{yPercent:-4,scale:1.12,filter:"blur(0px)"});
+  const tl=gsap.timeline({onComplete:()=>{if(!reduce)breath=gsap.to(raura,{yPercent:-19,scale:1.36,duration:3.2,ease:"sine.inOut",yoyo:true,repeat:-1})}});
+  tl.to(rcard,{opacity:1,duration:T(.12),ease:"none"},0);
+  tl.call(()=>{w.o=0},null,T(.12));
+  tl.to(rcard,{x:0,y:0,scale:1,borderRadius:34,duration:T(.7),ease:"power3.inOut"},T(.1));
+  tl.to(raura,{yPercent:-14,scale:1.3,filter:"blur(26px)",duration:T(.9),ease:"power2.inOut"},T(.15));
+  tl.to(rghost,{opacity:0,duration:T(.22),ease:"power1.out"},T(.38));
+  tl.to([".r-top",".r-bottom"],{opacity:1,y:0,duration:T(.3),stagger:.05,ease:"power2.out"},T(.48));
 }
 function morphOut(done){
   const w=cards[resultIdx];if(breath){breath.kill();breath=null}
   if(!w){gsap.set(rcard,{autoAlpha:0});done();return}
-  const t=w.el.getBoundingClientRect(),R=resultRect(),sx=t.width/R.w,sy=t.height/R.h;
-  const tl=gsap.timeline({onComplete:()=>{w.o=1;gsap.set(rcard,{autoAlpha:0});done()}});
-  tl.to([".r-top",".r-bottom"],{opacity:0,y:8,duration:T(.2)},0);
-  tl.to(raura,{yPercent:14,scale:.95,duration:T(.6),ease:"power2.inOut"},0);
-  tl.to(rcard,{x:t.left-R.x,y:t.top-R.y,scaleX:sx,scaleY:sy,borderRadius:(L.cw*.15)/sx,duration:T(.6),ease:"power3.inOut"},.1);
+  const t=w.el.getBoundingClientRect(),R=resultRect(),sc=t.width/R.w;
+  const tl=gsap.timeline({onComplete:()=>{w.o=1;gsap.to(rcard,{autoAlpha:0,duration:T(.12),ease:"none",onComplete:done})}});
+  tl.to([".r-top",".r-bottom"],{opacity:0,y:6,duration:T(.18)},0);
+  tl.to(rghost,{opacity:1,duration:T(.2)},T(.1));
+  tl.to(raura,{yPercent:-4,scale:1.12,filter:"blur(0px)",duration:T(.6),ease:"power2.inOut"},0);
+  tl.to(rcard,{x:t.left-R.x,y:t.top-R.y,scale:sc,borderRadius:(L.cw*.15)/sc,duration:T(.6),ease:"power3.inOut"},.08);
 }
 
 function again(auto){
