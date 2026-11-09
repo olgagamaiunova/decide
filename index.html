@@ -80,7 +80,7 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
   background:radial-gradient(50% 50% at 50% 62%,var(--c2) 0%,color-mix(in srgb,var(--c2) 55%,var(--c1)) 14%,var(--c1) 28%,color-mix(in srgb,var(--c1) 55%,var(--c0)) 40%,color-mix(in srgb,var(--c0) 70%,transparent) 52%,color-mix(in srgb,var(--c0) 35%,transparent) 63%,color-mix(in srgb,var(--c0) 12%,transparent) 73%,transparent 84%);
   transform:translateY(12%) scale(.95);transform-origin:50% 100%;opacity:.92;transition:transform .9s cubic-bezier(.2,.8,.2,1),opacity .6s}
 .wheel.flat .card::before{opacity:0}
-.wheel.m.stacked{visibility:hidden}
+.wheel.m.stacked{opacity:0}
 .wheel.stacked .card:not(.on)::before{opacity:0}
 .card.on .aura,.wheel.live .card:hover .aura{transform:translateY(-4%) scale(1.12);opacity:1}
 .card.win .aura{transform:translateY(-12%) scale(1.25);opacity:1;animation:breathe 3.2s ease-in-out .9s infinite alternate}
@@ -118,6 +118,15 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .r-bottom{padding:0 18px 18px;display:flex;flex-direction:column;gap:10px}
 .r-again{height:58px;border:0;border-radius:999px;background:#FFFFFF;color:#231F20;font-weight:700;font-size:17px;box-shadow:0 12px 26px -16px rgba(35,31,32,.4);transition:transform .15s}
 .r-again:active{transform:translateY(1px)}
+.r-row{display:flex;gap:10px}
+.r-pill,.r-icon{height:52px;border:0;background:rgba(255,255,255,.42);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);color:#231F20;transition:background .2s}
+.r-pill{flex:1;border-radius:999px;font-weight:600;font-size:15px}
+.r-icon{flex:none;width:52px;border-radius:50%;display:grid;place-items:center}
+.r-icon svg{width:22px;height:22px}
+.r-pill:hover,.r-icon:hover{background:rgba(255,255,255,.62)}
+.r-bottom{position:relative}
+.r-toast{position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%);padding:8px 14px;border-radius:999px;background:rgba(35,31,32,.88);color:#fff;font-size:14px;font-weight:600;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .25s}
+.r-toast.show{opacity:1}
 .r-seg{display:flex;align-items:center;height:50px;border-radius:999px;background:rgba(255,255,255,.4);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 .r-seg button{flex:1;height:100%;border:0;background:transparent;font-weight:600;font-size:15px;color:#231F20;border-radius:999px;transition:background .2s}
 .r-seg button:hover{background:rgba(255,255,255,.35)}
@@ -199,7 +208,8 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
   </div>
   <div class="r-bottom">
     <button class="r-again" id="again" type="button" data-t="again"></button>
-    <div class="r-seg"><button id="share" type="button" data-t="share"></button><span aria-hidden="true"></span><button id="edit2" type="button" data-t="change"></button></div>
+    <div class="r-row"><button class="r-pill" id="edit2" type="button" data-t="change"></button><button class="r-icon" id="share" type="button" data-ta="share"><svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M216,112v96a16,16,0,0,1-16,16H56a16,16,0,0,1-16-16V112A16,16,0,0,1,56,96H80a8,8,0,0,1,0,16H56v96H200V112H176a8,8,0,0,1,0-16h24A16,16,0,0,1,216,112ZM93.66,69.66,120,43.31V136a8,8,0,0,0,16,0V43.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,69.66Z"/></svg></button></div>
+    <div class="r-toast" id="rtoast" role="status"></div>
   </div>
 </section>
 
@@ -347,6 +357,7 @@ $("clearAll").onclick=()=>{qIn.value="";updQclr();options=[{id:nextId++,text:"",
 function applyLang(){
   document.documentElement.lang=lang;
   document.querySelectorAll("[data-t]").forEach(el=>{el.textContent=t(el.dataset.t)});
+  document.querySelectorAll("[data-ta]").forEach(el=>{el.setAttribute("aria-label",t(el.dataset.ta))});
   document.querySelectorAll(".lang button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.l===lang)));
   qclr.setAttribute("aria-label",t("clear"));
   dhint.textContent=t(matchMedia("(pointer:coarse)").matches?"hintTouch":"hintDesk");
@@ -392,6 +403,7 @@ function onShake(){if(state==="decide")spin(Math.random()<.5?1:-1,1.2);else if(s
 /* states */
 function toDecide(){
   if(state!=="edit")return;
+  {const v=qIn.value;qIn.value="";qIn.value=v;renderList()}
   computeValid();
   if(valid.length<2){hint.textContent=t("needTwo");gsap.fromTo(go,{x:-8},{x:0,duration:.6,ease:"elastic.out(1,.3)"});return}
   ensureAudio();requestMotion();
@@ -405,9 +417,9 @@ function toDecide(){
   gsap.to(edit,{autoAlpha:0,y:-18,duration:T(.35),ease:"power2.in"});
   const tl=gsap.timeline({onComplete:()=>{state="decide";drifting=true;wheel.classList.add("live");wheel.classList.remove("flat");settle()}});
   tl.to(C,{x:L.decide.x,y:L.decide.y,duration:T(.6),ease:"power3.inOut"},.1);
-  tl.to(G,{z:L.R,duration:T(.9),ease:"power3.inOut"},.5);
+  tl.to(G,{z:L.R,duration:T(.95),ease:"power3.out"},.5);
   const order=cards.map((c,i)=>i).sort((a,b)=>Math.abs(norm(a*L.step))-Math.abs(norm(b*L.step)));
-  order.forEach((i,k)=>{tl.to(cards[i],{rad:L.R,ang:norm(i*L.step),tilt:0,x:0,y:0,o:1,s:1,duration:T(.95),ease:"back.out(1.05)"},.5+k*T(.035))});
+  order.forEach((i,k)=>{const at=.5+k*T(.025);tl.to(cards[i],{rad:L.R,tilt:0,x:0,y:0,o:1,s:1,duration:T(.95),ease:"power3.out"},.5);tl.to(cards[i],{ang:norm(i*L.step),duration:T(.95),ease:"power3.out"},at)});
   tl.fromTo(decideUI,{autoAlpha:0},{autoAlpha:1,duration:T(.45)},.95);
 }
 go.onclick=()=>{
@@ -482,8 +494,8 @@ function morphOut(done){
   const tl=gsap.timeline({onComplete:()=>{w.o=1;gsap.to(rcard,{autoAlpha:0,duration:T(.12),ease:"none",onComplete:done})}});
   tl.to([".r-top",".r-bottom"],{opacity:0,y:6,duration:T(.18)},0);
   tl.to(rghost,{opacity:1,duration:T(.2)},T(.1));
-  tl.to(raura,{yPercent:-4,scale:1.12,filter:"blur(0px)",duration:T(.6),ease:"power2.inOut"},0);
-  tl.to(rcard,{x:t.left-R.x,y:t.top-R.y,scale:sc,borderRadius:(L.cw*.15)/sc,duration:T(.6),ease:"power3.inOut"},.08);
+  tl.to(raura,{yPercent:-4,scale:1.12,filter:"blur(0px)",duration:T(.5),ease:"power2.inOut"},0);
+  tl.to(rcard,{x:t.left-R.x,y:t.top-R.y,scale:sc,borderRadius:(L.cw*.15)/sc,duration:T(.5),ease:"power3.inOut"},.06);
 }
 
 function again(auto){
@@ -491,21 +503,20 @@ function again(auto){
   morphOut(()=>{
     resultIdx=-1;wheel.classList.add("flat");
     const tl=gsap.timeline({onComplete:()=>{state="decide";drifting=true;spinBtn.disabled=false;wheel.classList.add("live");wheel.classList.remove("flat");settle();if(auto)spin(Math.random()<.5?1:-1,1)}});
-    tl.to(G,{z:L.R,duration:T(.7),ease:"power3.inOut"},0);
-    cards.forEach(c=>tl.to(c,{rad:L.R,s:1,o:1,tilt:0,duration:T(.7),ease:"power3.inOut"},0));
-    tl.to(decideUI,{autoAlpha:1,duration:T(.35)},.45);
+    tl.to(G,{z:L.R,duration:T(.55),ease:"power3.out"},0);
+    cards.forEach(c=>tl.to(c,{rad:L.R,s:1,o:1,tilt:0,duration:T(.55),ease:"power3.out"},0));
+    tl.to(decideUI,{autoAlpha:1,duration:T(.3)},T(.25));
   });
 }
 $("again").onclick=()=>again(false);
 
 function collapse(){
-  phi=((phi%360)+360)%360;resultIdx=-1;
-  wheel.classList.add("flat");const tl=gsap.timeline({onComplete:()=>{state="edit";wheel.classList.add("stacked");wheel.classList.remove("flat");settle()}});
+  resultIdx=-1;wheel.classList.add("flat");
+  const tl=gsap.timeline();
   tl.to(decideUI,{autoAlpha:0,duration:T(.25)},0);
-  tl.to(G,{z:0,duration:T(.7),ease:"power3.inOut"},.05);
-  cards.forEach((c,i)=>{const P=stackP(i,cards.length);tl.to(c,{rad:(cards.length-i)*.6,ang:nearest(c.ang,-phi),s:L.stackScale*P.s,o:P.o,tilt:P.r,x:P.x,y:P.y,duration:T(.7),ease:"power3.inOut"},.05+i*.01)});
-  tl.to(C,{x:L.edit.x,y:L.edit.y,duration:T(.75),ease:"power3.inOut"},.1);
-  tl.to(edit,{autoAlpha:1,y:0,duration:T(.4),ease:"power2.out"},.45);
+  cards.forEach(c=>tl.to(c,{o:0,duration:T(.28),ease:"power1.in"},0));
+  tl.call(()=>{phi=0;stackPose();C.x=L.edit.x;C.y=L.edit.y;wheel.classList.add("stacked");wheel.classList.remove("flat");state="edit";revealStack(true);settle()},null,T(.3));
+  tl.to(edit,{autoAlpha:1,y:0,duration:T(.4),ease:"power2.out"},T(.25));
 }
 function toEdit(){
   if(spinning||state==="busy")return;
@@ -558,14 +569,14 @@ async function prepareShare(v){
   }catch(e){shareFile=null}
 }
 $("share").onclick=async e=>{
-  const b=e.currentTarget,q=qIn.value.trim(),text=(q?q+" ":"")+ra.textContent+".";
-  const flash=k=>{b.textContent=t(k);setTimeout(()=>b.textContent=t("share"),1600)};
+  const q=qIn.value.trim(),text=(q?q+" ":"")+ra.textContent+".";
+  const toast=$("rtoast"),flash=k=>{toast.textContent=t(k);toast.classList.add("show");clearTimeout(flash.tm);flash.tm=setTimeout(()=>toast.classList.remove("show"),1600)};
   try{
     if(shareFile&&navigator.canShare&&navigator.canShare({files:[shareFile]})){await navigator.share({files:[shareFile]});return}
     if(navigator.share){await navigator.share({text});return}
   }catch(err){if(err&&err.name==="AbortError")return}
   if(shareFile){try{const u=URL.createObjectURL(shareFile),a=document.createElement("a");a.href=u;a.download="decision.png";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);flash("saved");return}catch(err){}}
-  try{await navigator.clipboard.writeText(text);flash("copied")}catch(err){b.textContent=t("copyFail")}
+  try{await navigator.clipboard.writeText(text);flash("copied")}catch(err){flash("copyFail")}
 };
 
 /* drag / flick: horizontal drag turns the drum */
