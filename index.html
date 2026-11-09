@@ -560,7 +560,9 @@ async function prepareShare(v){
     x.fillText(q,pad,pad+40);
     const top=pad+40+56,maxH=640;let fs=170,lines=[v.text];
     x.fillStyle="#231F20";
-    for(;fs>=44;fs-=6){x.font=`800 ${fs}px "Manrope", sans-serif`;lines=wrapLines(x,v.text,maxW);if(lines.length*fs<=maxH)break}
+    const words=v.text.split(/\s+/).filter(Boolean);
+    for(;fs>=44;fs-=6){x.font=`800 ${fs}px "Manrope", sans-serif`;if(fs>44&&words.some(w=>x.measureText(w).width>maxW))continue;lines=wrapLines(x,v.text,maxW);if(lines.length*fs<=maxH)break}
+    if(fs<44){fs=44;x.font='800 44px "Manrope", sans-serif';lines=wrapLines(x,v.text,maxW)}
     lines.forEach((l,i)=>x.fillText(l,pad,top+fs*.88+i*fs));
     x.font='700 32px "Manrope", sans-serif';x.fillStyle="#231F20";x.fillText("Let’s decide",pad,H-pad+10);
     x.font='500 32px "Manrope", sans-serif';x.fillStyle="rgba(35,31,32,.72)";x.textAlign="right";x.fillText("by Olga Gamaiunova",W-pad,H-pad+10);x.textAlign="left";
