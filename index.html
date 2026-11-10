@@ -52,7 +52,44 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
 .q{width:100%;font:700 24px "Manrope",sans-serif;letter-spacing:-.02em;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink);padding:6px 2px 14px;margin:0 0 36px;border-radius:0;outline:none;transition:border-color .2s}
 .q:focus-visible{border-bottom-color:var(--ink);outline:none}
 .opts{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
-.opt{display:flex;align-items:center;gap:10px;height:58px;padding:0 8px 0 9px;border-radius:999px;background:var(--field);transition:box-shadow .2s}
+.opt{position:relative;display:flex;align-items:center;gap:10px;height:58px;padding:0 8px 0 4px;border-radius:999px;background:var(--field);transition:transform .18s ease,box-shadow .2s}
+.opt.dragging{transition:box-shadow .2s;z-index:3;box-shadow:0 16px 32px -16px rgba(35,31,32,.38)}
+.grip{flex:none;width:28px;height:42px;margin-right:-6px;border:0;background:transparent;border-radius:12px;color:var(--ink-soft);display:grid;place-items:center;cursor:grab;touch-action:none;opacity:.7;transition:opacity .2s,background .2s}
+.grip:hover{opacity:1;background:var(--line)}
+.opt.dragging .grip{cursor:grabbing;opacity:1}
+.grip svg{width:14px;height:14px}
+.presets-wrap{margin:0 0 26px}
+.presets-wrap[hidden]{display:none}
+.presets{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 4px;margin:0 -2px;scrollbar-width:none}
+.presets::-webkit-scrollbar{display:none}
+.chip{flex:none;display:flex;align-items:center;height:40px;max-width:250px;padding:0 4px 0 14px;border-radius:999px;background:var(--ghost)}
+.chip-load{min-width:0;border:0;background:transparent;padding:0;font-weight:600;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chip-x{flex:none;width:30px;height:30px;border:0;background:transparent;border-radius:50%;color:var(--ink-soft);display:grid;place-items:center;transition:background .2s}
+.chip-x:hover{background:var(--line)}
+.chip-x svg{width:10px;height:10px}
+.lbl-actions{display:flex;gap:16px}
+.presets[hidden]{display:none}
+.chip.active{background:var(--ink)}
+.chip.active .chip-load,.chip.active .chip-x{color:var(--paper)}
+.psel{position:relative}
+.psel[hidden]{display:none}
+.psel-btn{width:100%;height:48px;display:flex;align-items:center;gap:10px;padding:0 16px 0 18px;border:0;border-radius:999px;background:var(--ghost);font-weight:600;font-size:15px;color:var(--ink);text-align:left;transition:background .2s}
+.psel-btn:hover{background:var(--line)}
+.psel-btn .psel-l{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.psel-btn .psel-l.muted{color:var(--ink-soft)}
+.psel-n{flex:none;min-width:26px;height:24px;padding:0 8px;border-radius:999px;background:var(--paper);font-size:12px;font-weight:700;display:grid;place-items:center;color:var(--ink-soft)}
+.psel-btn svg{flex:none;width:14px;height:14px;transition:transform .2s}
+.psel-btn[aria-expanded="true"] svg{transform:rotate(180deg)}
+.psel-menu{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:10;max-height:min(340px,52vh);overflow-y:auto;padding:6px;border-radius:22px;background:var(--paper);box-shadow:0 0 0 1px var(--line),0 24px 48px -20px rgba(35,31,32,.35)}
+.psel-menu[hidden]{display:none}
+.pitem{display:flex;align-items:center;border-radius:16px;transition:background .15s}
+.pitem:hover,.pitem.active{background:var(--ghost)}
+.pitem .pcheck{flex:none;width:16px;height:16px;margin-left:12px;color:var(--ink)}
+.pitem .pspace{flex:none;width:16px;margin-left:12px}
+.pitem-load{flex:1;min-width:0;border:0;background:transparent;text-align:left;padding:10px 10px;display:flex;flex-direction:column;gap:2px}
+.pitem-load b{font-weight:700;font-size:15px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pitem-load small{font-weight:500;font-size:13px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pitem .chip-x{margin-right:6px}
 .opt:focus-within{box-shadow:0 0 0 2px var(--ink)}
 .dot{width:40px;height:40px;flex:none;border-radius:50%;
   background:radial-gradient(circle at 50% 60%,var(--c2) 0%,var(--c1) 32%,color-mix(in srgb,var(--c0) 80%,transparent) 55%,transparent 72%);filter:blur(1.5px)}
@@ -177,9 +214,10 @@ button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:tra
   <div class="lang" role="group" aria-label="Language"><button type="button" data-l="en">EN</button><button type="button" data-l="ru">RU</button><button type="button" data-l="sr">SR</button></div>
   <div class="edit-inner">
     <h1 class="title" data-t="title"></h1>
+    <div class="presets-wrap" id="presetsWrap" hidden><span class="lbl" data-t="savedLabel"></span><div class="presets" id="presets"></div><div class="psel" id="psel" hidden><button class="psel-btn" id="pselBtn" type="button" aria-haspopup="listbox" aria-expanded="false"><span class="psel-l" id="pselLbl"></span><span class="psel-n" id="pselN"></span><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5.5l4 4 4-4"/></svg></button><div class="psel-menu" id="pselMenu" role="listbox" hidden></div></div></div>
     <label class="lbl" for="q" data-t="qLabel"></label>
     <div class="qwrap"><input id="q" class="q" maxlength="80" autocomplete="off"><button class="clr" id="qclr" type="button"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button></div>
-    <div class="lblrow"><span class="lbl" id="optsLbl" data-t="optsLabel"></span><button class="clearall" id="clearAll" type="button" data-t="clearAll"></button></div>
+    <div class="lblrow"><span class="lbl" id="optsLbl" data-t="optsLabel"></span><div class="lbl-actions"><button class="clearall" id="savePreset" type="button" data-t="save"></button><button class="clearall" id="clearAll" type="button" data-t="clearAll"></button></div></div>
     <ul class="opts" id="opts" aria-labelledby="optsLbl"></ul>
     <button class="add" id="add" type="button"><span class="plus" aria-hidden="true">+</span><span id="addLbl"></span></button>
     <div class="actions">
@@ -224,9 +262,9 @@ const edit=$("edit"),wheel=$("wheel"),decideUI=$("decideUI"),rcard=$("rcard"),ra
 const qIn=$("q"),ul=$("opts"),addBtn=$("add"),go=$("go"),hint=$("hint"),dq=$("dq"),spinBtn=$("spin"),dhint=$("dhint"),rq=$("rq"),ra=$("ra");
 
 const I18N={
- en:{title:"Let’s\ndecide",qLabel:"Problem of the day…",defQ:"What’s for dinner?",optsLabel:"Options…",clearAll:"Clear all",opt:"Option",add:"Add option",max:"That’s plenty",deal:"Deal the cards",needTwo:"Add at least two options",change:"Change options",hintTouch:"Flick the cards or shake your phone",hintDesk:"Drag the cards, press Spin or hit Space",spin:"Spin",again:"Spin again",share:"Share",copied:"Copied",copyFail:"Couldn’t copy",clear:"Clear",remove:"Remove option",fallbackQ:"Let’s decide",decision:"Decision",saved:"Image saved",defOpts:["Pizza","Noodles","Tacos"]},
- ru:{title:"Давай\nрешим",qLabel:"Вопрос дня…",defQ:"Что на ужин?",optsLabel:"Варианты…",clearAll:"Очистить всё",opt:"Вариант",add:"Добавить вариант",max:"Вариантов достаточно",deal:"Раздать карты",needTwo:"Нужно хотя бы два варианта",change:"Изменить варианты",hintTouch:"Смахни карты или потряси телефон",hintDesk:"Потяни карты, нажми «Крутить» или пробел",spin:"Крутить",again:"Ещё раз",share:"Поделиться",copied:"Скопировано",copyFail:"Не получилось скопировать",clear:"Очистить",remove:"Удалить вариант",fallbackQ:"Давай решим",decision:"Решение",saved:"Картинка сохранена",defOpts:["Пицца","Лапша","Тако"]},
- sr:{title:"Hajde da\nodlučimo",qLabel:"Pitanje dana…",defQ:"Šta za večeru?",optsLabel:"Opcije…",clearAll:"Obriši sve",opt:"Opcija",add:"Dodaj opciju",max:"Dovoljno opcija",deal:"Podeli karte",needTwo:"Dodaj bar dve opcije",change:"Promeni opcije",hintTouch:"Povuci karte ili protresi telefon",hintDesk:"Povuci karte, pritisni „Zavrti“ ili razmak",spin:"Zavrti",again:"Ponovo",share:"Podeli",copied:"Kopirano",copyFail:"Kopiranje nije uspelo",clear:"Obriši",remove:"Ukloni opciju",fallbackQ:"Hajde da odlučimo",decision:"Odluka",saved:"Slika sačuvana",defOpts:["Pica","Nudle","Tako"]}
+ en:{title:"Let’s\ndecide",qLabel:"Problem of the day…",defQ:"What’s for dinner?",optsLabel:"Options…",clearAll:"Clear all",opt:"Option",add:"Add option",max:"That’s plenty",deal:"Deal the cards",needTwo:"Add at least two options",change:"Change options",hintTouch:"Flick the cards or shake your phone",hintDesk:"Drag the cards, press Spin or hit Space",spin:"Spin",again:"Spin again",share:"Share",copied:"Copied",copyFail:"Couldn’t copy",clear:"Clear",remove:"Remove option",fallbackQ:"Let’s decide",decision:"Decision",saved:"Image saved",save:"Save list",savedOk:"Saved",savedLabel:"Saved lists…",untitled:"Untitled",drag:"Drag to reorder",pick:"Choose a saved list",delPreset:"Delete list",defOpts:["Pizza","Noodles","Tacos"]},
+ ru:{title:"Давай\nрешим",qLabel:"Вопрос дня…",defQ:"Что на ужин?",optsLabel:"Варианты…",clearAll:"Очистить всё",opt:"Вариант",add:"Добавить вариант",max:"Вариантов достаточно",deal:"Раздать карты",needTwo:"Нужно хотя бы два варианта",change:"Изменить варианты",hintTouch:"Смахни карты или потряси телефон",hintDesk:"Потяни карты, нажми «Крутить» или пробел",spin:"Крутить",again:"Ещё раз",share:"Поделиться",copied:"Скопировано",copyFail:"Не получилось скопировать",clear:"Очистить",remove:"Удалить вариант",fallbackQ:"Давай решим",decision:"Решение",saved:"Картинка сохранена",save:"Сохранить список",savedOk:"Сохранено",savedLabel:"Сохранённые списки…",untitled:"Без названия",drag:"Перетащи, чтобы изменить порядок",pick:"Выбрать сохранённый список",delPreset:"Удалить список",defOpts:["Пицца","Лапша","Тако"]},
+ sr:{title:"Hajde da\nodlučimo",qLabel:"Pitanje dana…",defQ:"Šta za večeru?",optsLabel:"Opcije…",clearAll:"Obriši sve",opt:"Opcija",add:"Dodaj opciju",max:"Dovoljno opcija",deal:"Podeli karte",needTwo:"Dodaj bar dve opcije",change:"Promeni opcije",hintTouch:"Povuci karte ili protresi telefon",hintDesk:"Povuci karte, pritisni „Zavrti“ ili razmak",spin:"Zavrti",again:"Ponovo",share:"Podeli",copied:"Kopirano",copyFail:"Kopiranje nije uspelo",clear:"Obriši",remove:"Ukloni opciju",fallbackQ:"Hajde da odlučimo",decision:"Odluka",saved:"Slika sačuvana",save:"Sačuvaj listu",savedOk:"Sačuvano",savedLabel:"Sačuvane liste…",untitled:"Bez naslova",drag:"Prevuci da promeniš redosled",pick:"Izaberi sačuvanu listu",delPreset:"Obriši listu",defOpts:["Pica","Nudle","Tako"]}
 };
 let lang=(()=>{try{const v=localStorage.getItem("decide-lang");if(I18N[v])return v}catch(e){}const n=(navigator.language||"en").slice(0,2).toLowerCase();return n==="ru"?"ru":["sr","hr","bs","sh"].includes(n)?"sr":"en"})();
 const t=k=>I18N[lang][k];
@@ -331,7 +369,7 @@ function renderList(focusIdx){
   options.forEach((o,idx)=>{
     const li=document.createElement("li");li.className="opt";
     const lab=t("opt")+" "+(idx+1);
-    li.innerHTML=`<span class="dot"></span><input aria-label="${lab}" placeholder="${lab}" maxlength="80" autocomplete="off"><button class="rm" type="button" aria-label="${options.length>2?t("remove"):t("clear")}: ${lab}"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button>`;
+    li.innerHTML=`<button class="grip" type="button" aria-label="${t("drag")}: ${lab}"><svg viewBox="0 0 14 14" fill="currentColor" aria-hidden="true"><circle cx="4.5" cy="2.5" r="1.3"/><circle cx="9.5" cy="2.5" r="1.3"/><circle cx="4.5" cy="7" r="1.3"/><circle cx="9.5" cy="7" r="1.3"/><circle cx="4.5" cy="11.5" r="1.3"/><circle cx="9.5" cy="11.5" r="1.3"/></svg></button><span class="dot"></span><input aria-label="${lab}" placeholder="${lab}" maxlength="80" autocomplete="off"><button class="rm" type="button" aria-label="${options.length>2?t("remove"):t("clear")}: ${lab}"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button>`;
     const inp=li.querySelector("input");inp.value=o.text;
     inp.addEventListener("input",()=>{o.text=inp.value;refresh()});
     inp.addEventListener("keydown",e=>{
@@ -340,6 +378,9 @@ function renderList(focusIdx){
     });
     const rm=li.querySelector(".rm");
     rm.onclick=()=>{if(options.length>2){options.splice(idx,1);renderList();refresh()}else{o.text="";inp.value="";inp.focus();refresh()}};
+    const grip=li.querySelector(".grip");
+    grip.addEventListener("pointerdown",e=>startDrag(e,idx,li));
+    grip.addEventListener("keydown",e=>{const d=e.key==="ArrowUp"?-1:e.key==="ArrowDown"?1:0;if(!d)return;e.preventDefault();const to=idx+d;if(to<0||to>=options.length)return;const [m]=options.splice(idx,1);options.splice(to,0,m);renderList();refresh();ul.querySelectorAll(".grip")[to]?.focus()});
     ul.appendChild(li);
   });
   addBtn.disabled=options.length>=MAX_OPTS;
@@ -351,9 +392,81 @@ function paintDots(){const dots=ul.querySelectorAll(".dot");options.forEach((o,i
 function addOption(){options.push({id:nextId++,text:"",ci:freeColor()});renderList(options.length-1);refresh()}
 const qclr=$("qclr");
 function updQclr(){qclr.hidden=!qIn.value}
-qIn.addEventListener("input",updQclr);
+qIn.addEventListener("input",()=>{updQclr();saveState();renderPresets()});
+function startDrag(e,idx,li){
+  if(e.button>0)return;e.preventDefault();
+  const rows=[...ul.children],n=rows.length;if(n<2)return;
+  const r0=rows[0].getBoundingClientRect(),r1=rows[1].getBoundingClientRect(),h=r1.top-r0.top;
+  const y0=e.clientY;let to=idx;const g=e.currentTarget;
+  try{g.setPointerCapture(e.pointerId)}catch(err){}
+  li.classList.add("dragging");document.activeElement&&document.activeElement.blur&&document.activeElement.blur();
+  const move=ev=>{
+    const lo=-idx*h,hi=(n-1-idx)*h,dy=Math.max(lo-12,Math.min(hi+12,ev.clientY-y0));
+    li.style.transform=`translateY(${dy}px)`;
+    to=Math.max(0,Math.min(n-1,Math.round(idx+dy/h)));
+    rows.forEach((r,j)=>{if(j===idx)return;let s=0;if(idx<to&&j>idx&&j<=to)s=-h;if(idx>to&&j<idx&&j>=to)s=h;r.style.transform=s?`translateY(${s}px)`:""});
+  };
+  const up=()=>{
+    g.removeEventListener("pointermove",move);g.removeEventListener("pointerup",up);g.removeEventListener("pointercancel",up);
+    li.style.transform=`translateY(${(to-idx)*h}px)`;
+    setTimeout(()=>{rows.forEach(r=>{r.style.transform=""});li.classList.remove("dragging");
+      if(to!==idx){const [m]=options.splice(idx,1);options.splice(to,0,m)}
+      renderList();refresh();},to!==idx?170:0);
+  };
+  g.addEventListener("pointermove",move);g.addEventListener("pointerup",up);g.addEventListener("pointercancel",up);
+}
+function saveState(){try{localStorage.setItem("decide-state",JSON.stringify({q:qIn.value,options:options.map(o=>({text:o.text,ci:o.ci}))}))}catch(e){}}
+function loadState(){try{const st=JSON.parse(localStorage.getItem("decide-state")||"null");if(st&&Array.isArray(st.options)&&st.options.length>=2){qIn.value=String(st.q??"");options=st.options.slice(0,MAX_OPTS).map((o,i)=>({id:i+1,text:String(o.text??""),ci:Math.abs(o.ci|0)%PALETTE.length}));nextId=options.length+1}}catch(e){}}
+let presets=[];try{const p=JSON.parse(localStorage.getItem("decide-presets")||"[]");if(Array.isArray(p))presets=p}catch(e){}
+function savePresets(){try{localStorage.setItem("decide-presets",JSON.stringify(presets))}catch(e){}}
+const curTexts=()=>options.map(o=>o.text.trim()).filter(Boolean);
+function isActive(p){return (p.q||"")===qIn.value.trim()&&JSON.stringify((p.options||[]).map(o=>o.text))===JSON.stringify(curTexts())}
+function loadPreset(p){qIn.value=p.q||"";options=(p.options||[]).map(o=>({id:nextId++,text:String(o.text||""),ci:Math.abs(o.ci|0)%PALETTE.length}));while(options.length<2)options.push({id:nextId++,text:"",ci:freeColor()});updQclr();renderList();refresh()}
+const pselBtn=$("pselBtn"),pselMenu=$("pselMenu");
+function setMenu(open){pselMenu.hidden=!open;pselBtn.setAttribute("aria-expanded",String(open))}
+pselBtn.onclick=()=>setMenu(pselMenu.hidden);
+document.addEventListener("pointerdown",e=>{if(!pselMenu.hidden&&!$("psel").contains(e.target))setMenu(false)});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!pselMenu.hidden){setMenu(false);pselBtn.focus()}});
+function renderPresets(){
+  const box=$("presets"),many=presets.length>2;
+  $("presetsWrap").hidden=!presets.length;box.hidden=many;$("psel").hidden=!many;
+  box.innerHTML="";pselMenu.innerHTML="";
+  const ai=presets.findIndex(isActive);
+  if(!many){
+    presets.forEach((p,i)=>{
+      const chip=document.createElement("div");chip.className="chip"+(i===ai?" active":"");
+      chip.innerHTML=`<button type="button" class="chip-load"></button><button type="button" class="chip-x"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button>`;
+      const name=p.q||t("untitled"),ld=chip.querySelector(".chip-load"),cx=chip.querySelector(".chip-x");
+      ld.textContent=name;ld.title=name;cx.setAttribute("aria-label",t("delPreset")+": "+name);
+      ld.onclick=()=>loadPreset(p);
+      cx.onclick=()=>{presets.splice(i,1);savePresets();renderPresets()};
+      box.appendChild(chip);
+    });
+    setMenu(false);return;
+  }
+  const lbl=$("pselLbl");lbl.textContent=ai>=0?(presets[ai].q||t("untitled")):t("pick");lbl.classList.toggle("muted",ai<0);
+  $("pselN").textContent=presets.length;
+  presets.forEach((p,i)=>{
+    const it=document.createElement("div");it.className="pitem"+(i===ai?" active":"");it.setAttribute("role","option");it.setAttribute("aria-selected",String(i===ai));
+    it.innerHTML=(i===ai?`<svg class="pcheck" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5"/></svg>`:'<span class="pspace"></span>')+`<button type="button" class="pitem-load"><b></b><small></small></button><button type="button" class="chip-x"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 2l8 8M10 2l-8 8"/></svg></button>`;
+    const name=p.q||t("untitled");
+    it.querySelector("b").textContent=name;it.querySelector("small").textContent=(p.options||[]).map(o=>o.text).join(" · ");
+    it.querySelector(".chip-x").setAttribute("aria-label",t("delPreset")+": "+name);
+    it.querySelector(".pitem-load").onclick=()=>{loadPreset(p);setMenu(false);pselBtn.focus()};
+    it.querySelector(".chip-x").onclick=e=>{e.stopPropagation();presets.splice(i,1);savePresets();renderPresets();if(presets.length>2)setMenu(true)};
+    pselMenu.appendChild(it);
+  });
+}
+$("savePreset").onclick=e=>{
+  computeValid();
+  if(valid.length<2){hint.textContent=t("needTwo");return}
+  const q=qIn.value.trim(),data={q,options:valid.map(v=>({text:v.text,ci:v.ci}))};
+  const k=presets.findIndex(p=>p.q===q);if(k>=0)presets.splice(k,1);
+  presets.unshift(data);presets=presets.slice(0,12);savePresets();renderPresets();
+  const b=e.currentTarget;b.textContent=t("savedOk")+" ✓";clearTimeout(b._tm);b._tm=setTimeout(()=>{b.textContent=t("save")},1500);
+};
 qclr.onclick=()=>{qIn.value="";updQclr();qIn.focus()};
-$("clearAll").onclick=()=>{qIn.value="";updQclr();options=[{id:nextId++,text:"",ci:0},{id:nextId++,text:"",ci:1}];renderList();refresh();qIn.focus()};
+$("clearAll").onclick=()=>{qIn.value="";updQclr();saveState();options=[{id:nextId++,text:"",ci:0},{id:nextId++,text:"",ci:1}];renderList();refresh();qIn.focus()};
 function applyLang(){
   document.documentElement.lang=lang;
   document.querySelectorAll("[data-t]").forEach(el=>{el.textContent=t(el.dataset.t)});
@@ -362,7 +475,7 @@ function applyLang(){
   qclr.setAttribute("aria-label",t("clear"));
   dhint.textContent=t(matchMedia("(pointer:coarse)").matches?"hintTouch":"hintDesk");
   if(state==="decide"||state==="busy")dq.textContent=qIn.value.trim()||t("fallbackQ");
-  renderList();
+  renderList();renderPresets();
 }
 function isDefault(l){const d=I18N[l];return qIn.value===d.defQ&&options.length===d.defOpts.length&&options.every((o,i)=>o.text===d.defOpts[i])}
 document.querySelectorAll(".lang button").forEach(b=>b.onclick=()=>{
@@ -381,6 +494,7 @@ function refresh(){
     builtN=valid.length;buildCards();stackPose();C.x=L.edit.x;C.y=L.edit.y;
     revealStack(false);
   }else paintCards();
+  saveState();renderPresets();
 }
 
 /* motion */
@@ -539,13 +653,13 @@ async function prepareShare(v){
   shareFile=null;
   try{
     await Promise.all([document.fonts.load('800 100px "Manrope"'),document.fonts.load('600 40px "Manrope"'),document.fonts.load('700 32px "Manrope"'),document.fonts.load('500 32px "Manrope"')]);
-    const W=1080,H=1350,pad=96,maxW=W-pad*2,cv=document.createElement("canvas");cv.width=W;cv.height=H;
+    const W=1080,H=1728,pad=96,maxW=W-pad*2,cv=document.createElement("canvas");cv.width=W;cv.height=H;
     const x=cv.getContext("2d"),p=PALETTE[v.ci];
     x.fillStyle="#F8F7F5";x.fillRect(0,0,W,H);
     x.save();x.translate(W/2,H+60);x.scale(1,.78);
-    const g=x.createRadialGradient(0,0,0,0,0,980);
+    const g=x.createRadialGradient(0,0,0,0,0,1120);
     g.addColorStop(0,p[2]);g.addColorStop(.18,p[2]);g.addColorStop(.36,p[1]);g.addColorStop(.6,p[0]);g.addColorStop(.84,p[0]+"00");
-    x.fillStyle=g;x.beginPath();x.arc(0,0,980,0,Math.PI*2);x.fill();x.restore();
+    x.fillStyle=g;x.beginPath();x.arc(0,0,1120,0,Math.PI*2);x.fill();x.restore();
     const n=document.createElement("canvas");n.width=n.height=160;const nx=n.getContext("2d"),id=nx.createImageData(160,160);
     for(let i=0;i<id.data.length;i+=4){const c=128+(Math.random()-.5)*120;id.data[i]=id.data[i+1]=id.data[i+2]=c;id.data[i+3]=255}
     nx.putImageData(id,0,0);
@@ -558,7 +672,7 @@ async function prepareShare(v){
     let q=qIn.value.trim()||t("decision");
     if(x.measureText(q).width>maxW){while(q.length>1&&x.measureText(q+"…").width>maxW)q=q.slice(0,-1);q+="…"}
     x.fillText(q,pad,pad+40);
-    const top=pad+40+56,maxH=640;let fs=170,lines=[v.text];
+    const top=pad+40+56,maxH=860;let fs=170,lines=[v.text];
     x.fillStyle="#231F20";
     const words=v.text.split(/\s+/).filter(Boolean);
     for(;fs>=44;fs-=6){x.font=`800 ${fs}px "Manrope", sans-serif`;if(fs>44&&words.some(w=>x.measureText(w).width>maxW))continue;lines=wrapLines(x,v.text,maxW);if(lines.length*fs<=maxH)break}
@@ -602,7 +716,7 @@ function settle(){if(innerWidth!==L.vw||innerHeight!==L.vh)applyLayout(true)}
 addEventListener("resize",()=>{if(state!=="busy")applyLayout(false)});
 
 /* init */
-qIn.value=t("defQ");updQclr();applyLang();
+qIn.value=t("defQ");loadState();updQclr();applyLang();
 computeValid();renderList();layout();buildCards();builtN=valid.length;stackPose();C.x=L.edit.x;C.y=L.edit.y;wheel.classList.add("stacked");
 document.fonts&&document.fonts.ready.then(paintCards);
 revealStack(true);
